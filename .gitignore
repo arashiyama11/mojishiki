@@ -1,0 +1,5 @@
+/.gradle/
+/.build/
+/convention-plugins/
+local.properties
+private-key
