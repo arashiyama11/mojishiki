@@ -14,7 +14,7 @@ class Unary(unaryString: String) {
 
   constructor(ps: List<TermBase>, dps: List<TermBase>? = null) : this("") {
     polynomials = ps
-    denoPolynomial = dps ?: listOf(Term("1"))
+    denoPolynomial = dps ?: listOf(Term.ONE)
   }
 
   companion object {
@@ -27,13 +27,13 @@ class Unary(unaryString: String) {
   private fun parse(input: String): Pair<List<TermBase>, List<TermBase>> {
     //ˆ—‰˜‚¢‚©‚ç—]—T‚ ‚é‚Æ‚«‚É’¼‚·
     if (input.isEmpty()) return emptyList<TermBase>() to emptyList()
-    val fs = Term.validFunctions.joinToString("|")
+    val fs = validFunctions.joinToString("|")
     var str = input.trim()
     var a = 0
     val regex = Regex("^\\)($fs).*")
     //*‚Ì•âŠ®
     while (a < str.length) {
-      if (a > 0 && str[a] == '(' && !Term.validFunctions.any { str.substring(0, a).endsWith(it) }) {
+      if (a > 0 && str[a] == '(' && !validFunctions.any { str.substring(0, a).endsWith(it) }) {
         val char = str[a - 1]
         if (char.isLetterOrDigit() || char == ')') {
           str = str.substring(0, a) + "*" + str.substring(a)
@@ -65,7 +65,7 @@ class Unary(unaryString: String) {
             }
           }
           val s = str.substring(0, a - r.length - 2)
-          val f = Term.validFunctions.find { s.endsWith(it) }
+          val f = validFunctions.find { s.endsWith(it) }
           if (f != null) {
             isFn = true
             "$f($r)"

@@ -215,7 +215,7 @@ class Polynomial(polynomialString: String) : TermBase() {
         term.functions.forEach { (t, u) ->
           return@map Unary(
             listOf(
-              u.args[0].toPolynomial().differential(), Term.specialFunctions[t]!!.differential!!.invoke(u.args)
+              u.args[0].toPolynomial().differential(), specialFunctions[t]!!.differential!!.invoke(u.args)
                 .toPolynomial().evaluate(), Term(term.coefficient)
             )
           ).evaluate().toUnary()
@@ -237,7 +237,7 @@ class Polynomial(polynomialString: String) : TermBase() {
     return Polynomial(terms.map {
       if (it.functions.size == 1) {
         it.functions.forEach { (t, u) ->
-          return@map Term.specialFunctions[t]!!.integral!!.invoke(u.args).toPolynomial().toUnary()
+          return@map specialFunctions[t]!!.integral!!.invoke(u.args).toPolynomial().toUnary()
         }
       }
       val d = it.letters[letter] ?: 0
