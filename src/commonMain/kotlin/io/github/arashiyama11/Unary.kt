@@ -310,7 +310,7 @@ class Unary(unaryString: String) {
           val b = if (index > 0 && polynomials[index - 1] is Term) polynomials[index - 1] as Term else null
           val f =
             b != null && b.letters.isEmpty() && b.functions.isEmpty() && a.letters.isEmpty()
-          if (f || index > 0 && (polynomials[index - 1] is Term && (polynomials[index - 1] as Term).letters.isNotEmpty())) {
+          if (f || index > 0 && polynomials[index - 1] is Term && (polynomials[index - 1] as Term).letters.isNotEmpty()) {
             "*${a.toStringWith(op)}"
           } else {
             a.toStringWith(op)

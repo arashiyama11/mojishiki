@@ -83,7 +83,7 @@ class Polynomial(polynomialString: String) : TermBase() {
     val deg = terms.maxOf { term -> term.letters.maxOfOrNull { it.value } ?: 0 }
     //~‚×‚«‚É‚µ‚Ä‹ó‚¢‚Ä‚¢‚éŸ”‚ğ0–„‚ß
     val cor = List(deg + 1) { d ->
-      terms.find { it.letters[letter] == d || (d == 0 && it.letters.isEmpty() || it.letters[letter] == null) }
+      terms.find { it.letters[letter] == d || d == 0 && it.letters.isEmpty() || it.letters[letter] == null }
         ?.div(Term(Rational.ONE, mapOf(letter to d)))
         ?: Term.ZERO
     }.reversed()
