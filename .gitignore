@@ -1,6 +1,7 @@
 /.gradle/
 /.build/
 /build/
-/convention-plugins/
+/convention-plugins/.gradle
+/convention-plugins/build
 local.properties
 private-key

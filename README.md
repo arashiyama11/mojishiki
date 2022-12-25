@@ -1,10 +1,13 @@
-# mojishiki
+<h1 align="center">mojishiki</h1>
 
 # About
 
 This is a Kotlin code that allows you to calculate literal-expression.
 
 Mojishiki means literal-expression in Japanese
+## Features
+- Pure Kotlin
+- Multiplatform
 
 # Installation
 ## Grade
