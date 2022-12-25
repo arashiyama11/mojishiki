@@ -21,4 +21,4 @@ jobs:
           cache: 'gradle'
 
       - name: test
-        run: ./gradlew clean
+        run: ./gradlew check
