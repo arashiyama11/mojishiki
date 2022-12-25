@@ -5,7 +5,11 @@ import kotlin.math.*
 data class Rational(var numerator: Long, var denominator: Long = 1) {
 
   constructor(double: Double) : this(0) {
-    val length = double.toString().length - double.toInt().toString().length - 1
+    //This is decimal length
+    //in js , 3.0.toString()==3 but others are 3.0.toString()==3.0
+    //so in js,if input is integer, length will be -1
+    var length = double.toString().length - double.toInt().toString().length - 1
+    if(length==-1)length=1
     val d = 10.0.pow(length.toDouble()).toLong()
     numerator = (double * d).toLong()
     denominator = d
