@@ -134,9 +134,9 @@ class Term(termString: String) : TermBase() {
 
   override fun equals(other: Any?): Boolean {
     if (other is Term) {
-      return (letters == other.letters)
-          && (coefficient == other.coefficient)
-          && (functions == other.functions)
+      return letters == other.letters
+          && coefficient == other.coefficient
+          && functions == other.functions
     }
     return false
   }
@@ -157,7 +157,7 @@ class Term(termString: String) : TermBase() {
       } && term.functions.all { (k, v) ->
         functions[k]?.let { it.degree == v.degree && it.args.toString() == v.args.toString() } == true
       }) {
-      return Term((coefficient + term.coefficient), letters, functions)
+      return Term(coefficient + term.coefficient, letters, functions)
     } else {
       throw TermPlusException("Cannot plus")
     }
@@ -165,7 +165,7 @@ class Term(termString: String) : TermBase() {
 
   operator fun plus(double: Double): Term {
     if (letters.isEmpty()) {
-      return Term((coefficient + Rational(double)), letters, functions)
+      return Term(coefficient + Rational(double), letters, functions)
     } else {
       throw TermPlusException("Cannot plus")
     }
@@ -192,15 +192,15 @@ class Term(termString: String) : TermBase() {
         fs += t to FunctionValue(i, p)
       }
     }
-    return Term((coefficient * term.coefficient), res, fs)
+    return Term(coefficient * term.coefficient, res, fs)
   }
 
   operator fun times(double: Double): Term {
-    return Term((coefficient * Rational(double)), letters, functions)
+    return Term(coefficient * Rational(double), letters, functions)
   }
 
   operator fun times(rational: Rational): Term {
-    return Term((coefficient * rational), letters, functions)
+    return Term(coefficient * rational, letters, functions)
   }
 
   operator fun times(Unary: Unary): Unary {
@@ -317,7 +317,7 @@ class Term(termString: String) : TermBase() {
             }
             str.toInt() * t
           } else 1
-          ls += (l to d)
+          ls += l to d
         } else {
           throw TermParseException("Unexpected token:${input[i]}")
         }
@@ -439,7 +439,7 @@ class Term(termString: String) : TermBase() {
       -1L -> if (add1) "-1" else "-"
       else -> coef.numerator.toString()
     } + pos + funcs +
-        (if (coef.denominator != 1L || neg.isNotEmpty()) "/${if (coef.denominator == 1L && neg.isNotEmpty()) "" else coef.denominator}${neg}" else "")
+        if (coef.denominator != 1L || neg.isNotEmpty()) "/${if (coef.denominator == 1L && neg.isNotEmpty()) "" else coef.denominator}${neg}" else ""
   }
 
   override fun toStringWith(options: Set<String>): String {
@@ -485,7 +485,7 @@ class Term(termString: String) : TermBase() {
       -1L -> if (add1) "-1" else "-"
       else -> coef.numerator.toString()
     } + pos + funcs +
-        (if (coef.denominator != 1L || neg.isNotEmpty()) "/${if (coef.denominator == 1L && neg.isNotEmpty()) "" else coef.denominator}${neg}" else "")
+        if (coef.denominator != 1L || neg.isNotEmpty()) "/${if (coef.denominator == 1L && neg.isNotEmpty()) "" else coef.denominator}${neg}" else ""
   }
 
   fun reciprocal(): Term {

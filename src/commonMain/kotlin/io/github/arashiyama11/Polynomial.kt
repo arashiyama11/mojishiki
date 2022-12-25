@@ -83,7 +83,7 @@ class Polynomial(polynomialString: String) : TermBase() {
     val deg = terms.maxOf { term -> term.letters.maxOfOrNull { it.value } ?: 0 }
     //~‚×‚«‚É‚µ‚Ä‹ó‚¢‚Ä‚¢‚éŽŸ”‚ð0–„‚ß
     val cor = List(deg + 1) { d ->
-      terms.find { it.letters[letter] == d || (d == 0 && (it.letters.isEmpty() || it.letters[letter] == null)) }
+      terms.find { it.letters[letter] == d || (d == 0 && it.letters.isEmpty() || it.letters[letter] == null) }
         ?.div(Term(Rational.ONE, mapOf(letter to d)))
         ?: Term.ZERO
     }.reversed()
@@ -106,7 +106,7 @@ class Polynomial(polynomialString: String) : TermBase() {
               null,
               mapOf("sqrt" to FunctionValue(1, listOf((b * b).toPolynomial() + (a * c * -4.0).toPolynomial())))
             ).toPolynomial()
-          val da = (a * 2.0)
+          val da = a * 2.0
           val mb = -b.toPolynomial()
           listOf(
             Unary(listOf(Polynomial(mb.unaries + d.unaries).evaluate()), listOf(da)).toPolynomial(),
@@ -252,9 +252,9 @@ class Polynomial(polynomialString: String) : TermBase() {
             }
           }
         } else {
-          (mapOf(
+          mapOf(
             letter to 1
-          ) + it.letters)
+          ) + it.letters
         }
       ).toUnary()
     }.toList()) + Term(Rational.ONE, mapOf('C' to 1)).toPolynomial()
@@ -354,7 +354,7 @@ class Polynomial(polynomialString: String) : TermBase() {
     pol.unaries.forEach { unary ->
       val t = unary.evaluate().toPolynomial()
       t.unaries.map { it.toTerm() }.forEach {
-        val i = result.indexOfFirst { t -> (t.letters == it.letters) }
+        val i = result.indexOfFirst { t -> t.letters == it.letters }
         if (i == -1) {
           result += it
         } else {
@@ -453,14 +453,14 @@ class Polynomial(polynomialString: String) : TermBase() {
 
     //x‚Ì‚Ý‚ðœ‚¢‚Ä~‚×‚«‚É‚·‚é
     val a = List(terms.size) { d ->
-      val ts = terms.filter { it.letters[letter] == d || (d == 0 && it.letters[letter] == null) }
+      val ts = terms.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
       if (ts.isEmpty()) return@List ONE
       else ts.map { it.toPolynomial() / Term(Rational.ONE, mapOf(letter to d)) }
         .reduce { acc, pol -> acc + pol }.toPolynomial()
     }.reversed().toMutableList()
 
     val b = List(dTerms.size) { d ->
-      val ts = dTerms.filter { it.letters[letter] == d || (d == 0 && it.letters[letter] == null) }
+      val ts = dTerms.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
       if (ts.isEmpty()) return@List ONE
       else ts.map { it.toPolynomial() / Term(Rational.ONE, mapOf(letter to d)) }
         .reduce { acc, pol -> acc + pol }.toPolynomial()
@@ -515,10 +515,10 @@ class Polynomial(polynomialString: String) : TermBase() {
     //Š„‚ç‚ê‚é‚Ù‚¤‚ÌŽ®‚ÌŽŸ”
     val divedMaxDeno = dived.maxOf { it.letters[letter] ?: 0 }
     val t =
-      terms.find { it.letters.isEmpty() || (it.letters[letter] == 0) || (it.letters[letter] == null) }!!.times(-1.0)
+      terms.find { it.letters.isEmpty() || it.letters[letter] == 0 || it.letters[letter] == null }!!.times(-1.0)
     val a = List(divedMaxDeno + 1) { d ->
       //x‚Ì‚Ý‚ðœ‚¢‚½‚©‚ñ‚¶‚É‚·‚é
-      val ts = dived.filter { it.letters[letter] == d || (d == 0 && it.letters[letter] == null) }
+      val ts = dived.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
       if (ts.isEmpty()) Term.ZERO
       else ts.map { it.toPolynomial() / Term(Rational.ONE, mapOf(letter to d)) }
         .reduce { acc, pol -> acc + pol }

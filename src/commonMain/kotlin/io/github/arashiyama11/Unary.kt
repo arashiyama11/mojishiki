@@ -96,7 +96,7 @@ class Unary(unaryString: String) {
           }
         }
         val bp = Polynomial(base)
-        if ((base.all { it.isDigit() || it == '-' } && d.all { it.isDigit() || it == '-' })
+        if (base.all { it.isDigit() || it == '-' } && d.all { it.isDigit() || it == '-' }
           || d.any { it.isLetter() } || !bp.canBeTerm()
         ) {
           val p = "pow($base,$d)"
@@ -275,15 +275,15 @@ class Unary(unaryString: String) {
     val result = Unary(
       listOf(us.reduce { acc, p ->
         when (acc) {
-          is Term -> if (p is Term) acc * p else (acc * (p as Polynomial))
-          is Polynomial -> if (p is Term) acc * p else (acc * (p as Polynomial)).evaluate()
+          is Term -> if (p is Term) acc * p else acc * p as Polynomial
+          is Polynomial -> if (p is Term) acc * p else (acc * p as Polynomial).evaluate()
           else -> throw Exception("Don't get here")
         }
       }),
       listOf(ds.reduce { acc, p ->
         when (acc) {
-          is Term -> if (p is Term) acc * p else (acc * (p as Polynomial))
-          is Polynomial -> if (p is Term) acc * p else (acc * (p as Polynomial)).evaluate()
+          is Term -> if (p is Term) acc * p else acc * p as Polynomial
+          is Polynomial -> if (p is Term) acc * p else (acc * p as Polynomial).evaluate()
           else -> throw Exception("Don't get here")
         }
       })
@@ -302,15 +302,15 @@ class Unary(unaryString: String) {
   private fun psToString(ps: List<TermBase>, options: Set<String>?): String {
     val op = options ?: emptySet()
     return ps
-      .filter { if (it is Term) !(it.isOne()) else true }
+      .filter { if (it is Term) !it.isOne() else true }
       .mapIndexed { index, it ->
         if (it is Term || it.toPolynomial().unaries.size == 1) {
           val a = if (it is Term) it else it.toTerm()
           //Œ»Ý‚Æ‘O‚ª—¼•û”Žš‚©‚Ç‚¤‚©
           val b = if (index > 0 && polynomials[index - 1] is Term) polynomials[index - 1] as Term else null
           val f =
-            b != null && (b.letters.isEmpty() && b.functions.isEmpty() && a.letters.isEmpty())
-          if (f || (index > 0 && (polynomials[index - 1] is Term && (polynomials[index - 1] as Term).letters.isNotEmpty()))) {
+            b != null && b.letters.isEmpty() && b.functions.isEmpty() && a.letters.isEmpty()
+          if (f || index > 0 && (polynomials[index - 1] is Term && (polynomials[index - 1] as Term).letters.isNotEmpty())) {
             "*${a.toStringWith(op)}"
           } else {
             a.toStringWith(op)
@@ -349,7 +349,7 @@ class Unary(unaryString: String) {
   operator fun times(rational: Rational): Unary {
     return Unary(
       polynomials + Term(Rational(rational.numerator)),
-      denoPolynomial + Term(Rational((rational.denominator)))
+      denoPolynomial + Term(Rational(rational.denominator))
     )
   }
 
@@ -420,8 +420,7 @@ class Unary(unaryString: String) {
       throw ClassCastException("Cannot be term")
     }
     if (polynomials.isEmpty()) return Term.ONE
-    return (polynomials.map { it.toTerm() }.reduce { acc, t -> acc * t }
-        ) / denoPolynomial.map { it.toTerm() }.reduce { acc, t -> acc * t }
+    return polynomials.map { it.toTerm() }.reduce { acc, t -> acc * t } / denoPolynomial.map { it.toTerm() }.reduce { acc, t -> acc * t }
   }
 
   fun canBeTerm(): Boolean {
