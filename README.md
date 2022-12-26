@@ -13,10 +13,10 @@ Mojishiki means literal-expression in Japanese
 ## Grade
 ```
 //gradle kotlin DSL
-implementation("io.github.arashiyama11:mojishiki:1.0.0")
+implementation("io.github.arashiyama11:mojishiki:1.0.1")
 
 //gradle groovy DSL
-implementation 'io.github.arashiyama11:mojishiki:1.0.0'
+implementation 'io.github.arashiyama11:mojishiki:1.0.1'
 ```
 
 ## Maven
@@ -24,7 +24,7 @@ implementation 'io.github.arashiyama11:mojishiki:1.0.0'
 <dependency>
   <groupId>io.github.arashiyama11</groupId>
   <artifactId>mojishiki</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
