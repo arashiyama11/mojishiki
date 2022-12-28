@@ -27,8 +27,8 @@ val specialFunctions = mapOf(
   "pow" to SpecialFunction({
     Term(Rational(it[0]).pow(it[1].toInt()))
   }, null, null, { args, _ ->
-    val b = if (args[0].canBeTerm()) "${args[0].toTerm()}" else "(${args[0]})"
-    val d = if (args[1].canBeTerm()) "${args[1].toTerm()}" else "(${args[1]})"
+    val b=args[0].toString().let { if(it.length==1) it else "($it)" }
+    val d=args[1].toString().let { if(it.length==1) it else "($it)" }
     "$b^$d"
   })
 )
