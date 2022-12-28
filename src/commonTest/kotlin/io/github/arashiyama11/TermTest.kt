@@ -31,6 +31,8 @@ class TermTest {
     assert(Term("3sin(2x)"), "3sin(2x)")
     assert(Term("-3sin(2x^2+3x-i)"), "-3sin(2x^2+3x-i)")
     assert(Term("sin(x)^2"), "sin(x)^2")
+    assert(Term("sin(x)^12cos(y)"), "sin(x)^12cos(y)")
+    assert(Term("sin(x)cos(y)^123log(12)"), "sin(x)cos(y)^123log(12)")
   }
 
   @Test

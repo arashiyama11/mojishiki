@@ -379,13 +379,14 @@ class Term(termString: String) : TermBase() {
             i++
             it.isDigit()
           }.toInt()
-        }
+          i-=2
+        }else i--
 
         funcs += func to FunctionValue(
           deg, args
         )
+        if(i+2==input.length)break
       }
-
       i++
     }
 
