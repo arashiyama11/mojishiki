@@ -23,27 +23,23 @@ class Unary(unaryString: String) {
     val MINUS_ONE = Term.MINUS_ONE.toUnary()
   }
 
-  //*で結合される式のリストを返す
-  private fun parse(input: String): Pair<List<TermBase>, List<TermBase>> {
-    //処理汚いから余裕あるときに直す
-    if (input.isEmpty()) return emptyList<TermBase>() to emptyList()
-    val fs = validFunctions.joinToString("|")
-    var str = input.trim()
-    var a = 0
-    val regex = Regex("^\\)($fs).*")
-    //*の補完
-    while (a < str.length) {
-      if (a > 0 && str[a] == '(' && !validFunctions.any { str.substring(0, a).endsWith(it) }) {
-        val char = str[a - 1]
-        if (char.isLetterOrDigit() || char == ')') {
+
+  private fun desuger(input:String):String{
+    var a=0
+    var str=input.trim()
+    while(a<str.length){
+      if(str[a]==')'&&a!=str.length-1&&(str[a+1].isLetterOrDigit()||str[a+1]=='(')){
+        str=str.substring(0,a+1)+"*"+str.substring(a+1)
+      }
+
+      if(a>0&&str[a]=='('&&!validFunctions.any { str.substring(0, a).endsWith(it) }){
+        val char=str[a-1]
+        if(char.isLetterOrDigit()){
           str = str.substring(0, a) + "*" + str.substring(a)
         }
       }
-      //fn()fn()をfn()*fn()に
-      if (str.substring(a).matches(regex)) {
-        str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
-      }
 
+      //累乗の処理
       if (str[a] == '^') {
         var isBaseBrk = false
         var isFn = false
@@ -106,8 +102,17 @@ class Unary(unaryString: String) {
           ) + p + str.substring(a + d.length + if (isDBrk) 2 else 1)
         }
       }
+
       a++
     }
+    return str
+  }
+
+  //*で結合される式のリストを返す
+  private fun parse(input: String): Pair<List<TermBase>, List<TermBase>> {
+    if (input.isEmpty()) return emptyList<TermBase>() to emptyList()
+    val str = desuger(input)
+    //*の補完
     val strUnarys = mutableListOf<String>()
     var j = 0
     var depth = 0
@@ -126,27 +131,15 @@ class Unary(unaryString: String) {
       }
     }
     strUnarys += str.substring(j).trim()
-    //関数で終わってるものを連結する
-    var i = 0
-    //関数^数字終わりか関数終わりにマッチする
-    val reg = Regex(".*(($fs)\\^\\d+\$|($fs))$")
-    while (i < strUnarys.size) {
-      if (strUnarys[i].matches(reg)) {
-        strUnarys[i] += strUnarys[i + 1]
-        strUnarys.removeAt(i + 1)
-        i--
-      }
-      i++
-    }
+
     val nums = mutableListOf<TermBase>()
     val denos = mutableListOf<TermBase>()
     strUnarys.filter { it.isNotEmpty() }.forEach {
-      val trimed = it.trim()
-      if (trimed[0] == '/') {
-        denos += if (trimed.length > 1 && trimed[1] == '(' && trimed.last() == ')') {
-          Polynomial(trimed.substring(2, trimed.length - 1).trim())
+      if (it[0] == '/') {
+        denos += if (it.length > 1 && it[1] == '(' && it.last() == ')') {
+          Polynomial(it.substring(2, it.length - 1).trim())
         } else {
-          Term(trimed.substring(1).trim())
+          Term(it.substring(1).trim())
         }
       } else {
         nums += if (it[0] == '(' && it.last() == ')') {
