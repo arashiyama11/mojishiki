@@ -1,7 +1,5 @@
 package io.github.arashiyama11
 
-import kotlin.math.*
-
 class Term(termString: String) : TermBase() {
   var coefficient: Rational
   var letters: MutableMap<Char, Int> = mutableMapOf()
@@ -36,8 +34,9 @@ class Term(termString: String) : TermBase() {
   }
 
   private fun evaluate(): Term {
-    var c = coefficient
-    val l = mutableMapOf<Char, Int>()
+    var c = coefficient.toRational()
+    var l = mutableMapOf<Char, Int>()
+    val f= mutableMapOf<String,FunctionValue>()
     letters.forEach { (k, v) ->
       if (v == 0) return@forEach
       when (k) {
@@ -58,16 +57,47 @@ class Term(termString: String) : TermBase() {
       }
     }
 
-    functions = functions.mapValues {
-      if (it.key == "pow") {
-        FunctionValue(
-          1,
-          listOf(it.value.args[0], it.value.args[1].toPolynomial() * Rational(it.value.degree.toLong()))
-        )
-      } else it.value
-    }.toMutableMap()
+    functions.forEach {(name,fv)->
+      val fn=when(name){
+        "pow"->{
+          val base=fv.args[0]
+          val deg=fv.args[1].toPolynomial()*fv.degree.toDouble()
+          if(base.canBeTerm()&&deg.canBeTerm()){
+            val t=deg.toTerm()
+            if(t.letters.isEmpty()&&t.functions.isEmpty()){
+              val r=base.toTerm().pow(t.coefficient.toInt())
+              c*=r.coefficient
 
+              val ls=(l.keys+r.letters.keys).distinct()
+              val res= mutableMapOf<Char,Int>()
+              for(k in ls){
+                res+=k to (l[k]?:0)+(r.letters[k]?:0)
+              }
 
+              l=res
+
+              r.functions.forEach { (t,fv)->
+                val i=fv.degree
+                val p=fv.args
+                if(f[t]?.args.toString()==p.toString()) {
+                  f[t] = FunctionValue(f[t]!!.degree + i, p)
+                }else {
+                  f += t to FunctionValue(i, p)
+                }
+              }
+              null
+            }else name to fv
+          }else name to fv
+        }
+        else -> name to fv
+      }
+
+      if(fn!=null){
+        f+=fn
+      }
+    }
+
+    functions=f
     coefficient = c
     letters = l
     return this
@@ -83,12 +113,12 @@ class Term(termString: String) : TermBase() {
       val argPs = tb.map { Polynomial(it.toPolynomial().unaries).evaluate().approximation() }
       //appâ¬î\(ëSÇƒêîÇæÇ¡ÇΩÇÁapp)Ç≈Ç»ÇØÇÍÇŒid
       if (argPs.any { !it.canBeTerm() }) {
-        r *= Term(Rational.ONE, null, mapOf(func to FunctionValue(i, argPs)))
+        r *= Term(Rational.ONE,null,mapOf(func to FunctionValue(i, argPs)))
         return@forEach
       }
       val ts = argPs.map { it.toTerm() }
       if (ts.any { it.functions.isNotEmpty() || it.letters.isNotEmpty() }) {
-        r *= Term(Rational.ONE, null, mapOf(func to FunctionValue(i, argPs)))
+        r *= Term(Rational.ONE,null,mapOf(func to FunctionValue(i, argPs)))
         return@forEach
       }
       val v = specialFunctions[func]!!.approximation(ts.map { it.coefficient.toDouble() })

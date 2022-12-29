@@ -23,7 +23,6 @@ class Unary(unaryString: String) {
     val MINUS_ONE = Term.MINUS_ONE.toUnary()
   }
 
-
   private fun desuger(input:String):String{
     var a=0
     var str=input.trim()
@@ -43,64 +42,66 @@ class Unary(unaryString: String) {
       if (str[a] == '^') {
         var isBaseBrk = false
         var isFn = false
-        val base = if (str[a - 1] == ')') {
-          //カッコの開きが関数
-          isBaseBrk = true
-          var depth = 0
-          val r = str.substring(0, a - 1).takeLastWhile {
-            when (it) {
-              ')' -> {
-                depth++
-                true
+
+        val base = when (str[a - 1]){
+          ')'->{
+            isBaseBrk = true
+            var depth = 0
+            val r = str.substring(0, a - 1).takeLastWhile {
+              when (it) {
+                ')' -> {
+                  depth++
+                  true
+                }
+                '(' -> if (depth == 0) false else {
+                  depth--
+                  true
+                }
+                else -> true
               }
-              '(' -> if (depth == 0) false else {
-                depth--
-                true
-              }
-              else -> true
             }
+            val s = str.substring(0, a - r.length - 2)
+            val f = validFunctions.find { s.endsWith(it) }
+            if (f != null) {
+              isFn = true
+              "$f($r)"
+            } else r
           }
-          val s = str.substring(0, a - r.length - 2)
-          val f = validFunctions.find { s.endsWith(it) }
-          if (f != null) {
-            isFn = true
-            "$f($r)"
-          } else r
-        } else str.substring(0, a).takeLastWhile {
-          it.isLetterOrDigit()
+          in "1234567890"->{
+            str.substring(0,a).takeLastWhile { it.isDigit() }
+          }
+          else->str[a-1].toString()
         }
+
         var isDBrk = false
-        val d = if (str[a + 1] == '(') {
-          isDBrk = true
-          var depth = 0
-          str.substring(a + 2).takeWhile {
-            when (it) {
-              '(' -> {
-                depth++
-                true
+        val d =when(str[a+1]){
+          '('->{
+            isDBrk = true
+            var depth = 0
+            str.substring(a + 2).takeWhile {
+              when (it) {
+                '(' -> {
+                  depth++
+                  true
+                }
+                ')' -> if (depth == 0) false else {
+                  depth--
+                  true
+                }
+                else -> true
               }
-              ')' -> if (depth == 0) false else {
-                depth--
-                true
-              }
-              else -> true
             }
           }
-        } else {
-          str.substring(a + 1).takeWhile {
-            it.isLetterOrDigit()
-          }
+          '-'->"-"+str.substring(a+2).takeWhile { it.isDigit() }
+          in "1234567890"-> str.substring(a+1).takeWhile { it.isDigit() }
+          else->str[a+1].toString()
         }
-        val bp = Polynomial(base)
-        if (base.all { it.isDigit() || it == '-' } && d.all { it.isDigit() || it == '-' }
-          || d.any { it.isLetter() } || !bp.canBeTerm()
-        ) {
-          val p = "pow($base,$d)"
-          str = str.substring(
-            0,
-            a - base.length - if (isBaseBrk && !isFn) 2 else 0
-          ) + p + str.substring(a + d.length + if (isDBrk) 2 else 1)
-        }
+
+        val p = "pow($base,$d)"
+        str = str.substring(
+          0,
+          a - base.length - if (isBaseBrk && !isFn) 2 else 0
+        ) + p + str.substring(a + d.length + if (isDBrk) 2 else 1)
       }
 
       a++
@@ -112,7 +113,6 @@ class Unary(unaryString: String) {
   private fun parse(input: String): Pair<List<TermBase>, List<TermBase>> {
     if (input.isEmpty()) return emptyList<TermBase>() to emptyList()
     val str = desuger(input)
-    //*の補完
     val strUnarys = mutableListOf<String>()
     var j = 0
     var depth = 0
@@ -131,7 +131,6 @@ class Unary(unaryString: String) {
       }
     }
     strUnarys += str.substring(j).trim()
-
     val nums = mutableListOf<TermBase>()
     val denos = mutableListOf<TermBase>()
     strUnarys.filter { it.isNotEmpty() }.forEach {
