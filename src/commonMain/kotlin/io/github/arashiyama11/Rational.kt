@@ -16,9 +16,9 @@ data class Rational(var numerator: Long, var denominator: Long = 1) {
   }
 
   companion object {
-    val ZERO = Rational(0)
-    val ONE = Rational(1)
-    val MINUS_ONE = Rational(-1)
+    val ZERO get() = Rational(0)
+    val ONE get() = Rational(1)
+    val MINUS_ONE get() = Rational(-1)
   }
 
 

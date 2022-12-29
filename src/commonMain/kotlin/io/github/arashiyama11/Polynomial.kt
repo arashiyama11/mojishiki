@@ -9,9 +9,9 @@ class Polynomial(polynomialString: String) : TermBase() {
   }
 
   companion object {
-    val ZERO = Term.ZERO.toPolynomial()
-    val ONE = Term.ONE.toPolynomial()
-    val MINUS_ONE = Term.MINUS_ONE.toPolynomial()
+    val ZERO get() = Term.ZERO.toPolynomial()
+    val ONE get() = Term.ONE.toPolynomial()
+    val MINUS_ONE get() = Term.MINUS_ONE.toPolynomial()
   }
 
   constructor(us: List<Unary>) : this("") {

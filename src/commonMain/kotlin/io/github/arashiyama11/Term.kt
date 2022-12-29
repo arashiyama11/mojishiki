@@ -9,9 +9,9 @@ class Term(termString: String) : TermBase() {
 
 
   companion object {
-    val ZERO = Term(Rational.ZERO)
-    val ONE = Term(Rational.ONE)
-    val MINUS_ONE = Term(Rational.MINUS_ONE)
+    val ZERO get() = Term(Rational.ZERO)
+    val ONE get() = Term(Rational.ONE)
+    val MINUS_ONE get() = Term(Rational.MINUS_ONE)
   }
 
   init {

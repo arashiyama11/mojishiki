@@ -18,9 +18,9 @@ class Unary(unaryString: String) {
   }
 
   companion object {
-    val ZERO = Term.ZERO.toUnary()
-    val ONE = Term.ONE.toUnary()
-    val MINUS_ONE = Term.MINUS_ONE.toUnary()
+    val ZERO get() = Term.ZERO.toUnary()
+    val ONE get() = Term.ONE.toUnary()
+    val MINUS_ONE get()= Term.MINUS_ONE.toUnary()
   }
 
   private fun desuger(input:String):String{
