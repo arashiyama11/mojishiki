@@ -23,7 +23,7 @@ class Term(termString: String) : TermBase() {
   }
 
   constructor(
-    coef: Rational,
+    coef: Rational = Rational.ONE,
     lts: Map<Char, Int>? = null,
     funcs: Map<String, FunctionValue>? = null
   ) : this("") {
@@ -113,12 +113,12 @@ class Term(termString: String) : TermBase() {
       val argPs = tb.map { Polynomial(it.toPolynomial().unaries).evaluate().approximation() }
       //appâ¬î\(ëSÇƒêîÇæÇ¡ÇΩÇÁapp)Ç≈Ç»ÇØÇÍÇŒid
       if (argPs.any { !it.canBeTerm() }) {
-        r *= Term(Rational.ONE,null,mapOf(func to FunctionValue(i, argPs)))
+        r *= Term(funcs = mapOf(func to FunctionValue(i, argPs)))
         return@forEach
       }
       val ts = argPs.map { it.toTerm() }
       if (ts.any { it.functions.isNotEmpty() || it.letters.isNotEmpty() }) {
-        r *= Term(Rational.ONE,null,mapOf(func to FunctionValue(i, argPs)))
+        r *= Term(funcs = mapOf(func to FunctionValue(i, argPs)))
         return@forEach
       }
       val v = specialFunctions[func]!!.approximation(ts.map { it.coefficient.toDouble() })
