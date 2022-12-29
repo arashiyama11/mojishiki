@@ -2,7 +2,30 @@ package io.github.arashiyama11
 
 import kotlin.math.*
 
-data class Rational(var numerator: Long, var denominator: Long = 1) {
+sealed class ExpressionUnit:TermBase()
+
+data class Letter(val letter:Char):ExpressionUnit(){
+  override fun toPolynomial()= Polynomial(listOf(toUnary()))
+
+  override fun toUnary()=Unary(listOf(toLetter()))
+
+  fun toLetter()=Letter(letter)
+
+  override fun toString()=letter.toString()
+}
+
+data class Func(val name:String,val args:List<Polynomial>):ExpressionUnit(){
+
+  override fun toPolynomial()= Polynomial(listOf(toUnary()))
+
+  override fun toUnary()=Unary(listOf(toFunc()))
+
+  fun toFunc()=Func(name,args.toList())
+
+  override fun toString(): String ="$name(${args.joinToString(",")})"
+}
+
+data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionUnit() {
 
   constructor(double: Double) : this(0) {
     //This is decimal length
@@ -41,6 +64,14 @@ data class Rational(var numerator: Long, var denominator: Long = 1) {
 
   fun toRational(): Rational {
     return Rational(numerator, denominator)
+  }
+
+  override fun toUnary(): Unary {
+    return Unary(listOf(toRational()))
+  }
+
+  override fun toPolynomial(): Polynomial {
+    return Polynomial(listOf(toUnary()))
   }
 
   operator fun plus(long: Long): Rational {
