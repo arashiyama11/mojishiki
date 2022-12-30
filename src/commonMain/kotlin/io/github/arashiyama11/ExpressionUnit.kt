@@ -2,7 +2,60 @@ package io.github.arashiyama11
 
 import kotlin.math.*
 
-sealed class ExpressionUnit:TermBase()
+sealed class ExpressionUnit:TermBase(){
+  companion object{
+    fun parse(input:String):ExpressionUnit{
+      val str=input.trim()
+      var a=0
+      val isMinus=if(str[a]=='-'){
+        a++
+        true
+      }else if(str[a]=='+'){
+        a++
+        false
+      }else false
+
+      while(str[a].isWhitespace())a++
+
+      val func= validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
+      return if(str[a].isDigit()){
+        //®”A¬”A•ª”
+        val numStart=a
+        val num=str.substring(a).takeWhile {
+          a++
+          it.isDigit()
+        }
+        when(str[a-1]){
+          '.'->Rational(input.substring(numStart).toDouble())
+          '/'-> Rational(num.toLong(),str.substring(a).toLong())
+          else->Rational(num.toLong())
+        }*if(isMinus) Rational.MINUS_ONE else Rational.ONE
+      }else if(func!=-1){
+        a+= validFunctions[func].length+1
+        val args= mutableListOf<String>()
+        var b=a
+        var depth=0
+        while(a<str.length){
+          when(str[a]){
+            '('->depth++
+            ')'->if(depth==0) break else depth--
+            ','->if(depth==0){
+              args+=str.substring(b,a)
+              b=a+1
+            }
+          }
+          a++
+        }
+        args+=str.substring(b,a-1)
+        Func(validFunctions[func], args.map{parse(it)})
+      }else{
+        Letter(str[a])
+      }
+    }
+  }
+
+  override operator fun times(other:TermBase)=Unary(listOf(this,other)).toPolynomial()
+}
 
 data class Letter(val letter:Char):ExpressionUnit(){
   override fun toPolynomial()= Polynomial(listOf(toUnary()))
@@ -12,9 +65,11 @@ data class Letter(val letter:Char):ExpressionUnit(){
   fun toLetter()=Letter(letter)
 
   override fun toString()=letter.toString()
+
+  override fun copy()=toLetter()
 }
 
-data class Func(val name:String,val args:List<Polynomial>):ExpressionUnit(){
+data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
 
   override fun toPolynomial()= Polynomial(listOf(toUnary()))
 
@@ -23,6 +78,8 @@ data class Func(val name:String,val args:List<Polynomial>):ExpressionUnit(){
   fun toFunc()=Func(name,args.toList())
 
   override fun toString(): String ="$name(${args.joinToString(",")})"
+
+  override fun copy()=toFunc()
 }
 
 data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionUnit() {
@@ -202,4 +259,6 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
     result = 31 * result + denominator.hashCode()
     return result
   }
+
+  override fun copy()=toRational()
 }

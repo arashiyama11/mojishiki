@@ -5,4 +5,7 @@ abstract class TermBase {
   abstract fun toUnary(): Unary
   abstract override fun equals(other: Any?): Boolean
   abstract override fun hashCode(): Int
+  fun toStringWith()=toString()
+  abstract operator fun times(other: TermBase): TermBase
+  abstract fun copy():TermBase
 }
