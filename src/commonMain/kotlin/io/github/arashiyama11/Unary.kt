@@ -465,8 +465,9 @@ class Unary(unaryString: String) :TermBase() {
   fun exprToString(exp:List<MutableMap.MutableEntry<out TermBase,Int>>?):String{
     if(exp==null)return ""
     return exp.mapIndexed { i, (tb,d) ->
-      "$tb"+when(d){
-        0,1->""
+      if(d==0)return@mapIndexed ""
+      (if(tb is Polynomial) "($tb)" else "$tb")+when(d){
+        1->""
         else->"^${d.absoluteValue}"
       }
     }.joinToString("")
