@@ -47,7 +47,7 @@ sealed class ExpressionUnit:TermBase(){
           a++
         }
         args+=str.substring(b,a-1)
-        Func(validFunctions[func], args.map{parse(it)})
+        Func(validFunctions[func], args.map{Unary(it)})
       }else{
         Letter(str[a])
       }
