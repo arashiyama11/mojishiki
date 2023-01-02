@@ -76,7 +76,7 @@ data class Letter(val letter:Char):ExpressionUnit(){
 
   override fun canBeUnary()=true
 
-  override fun substitute(args: Map<Letter, TermBase>)=args[this]?:this
+  override fun substitute(entries: Map<Letter, TermBase>)=entries[this]?:this
 }
 
 data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
