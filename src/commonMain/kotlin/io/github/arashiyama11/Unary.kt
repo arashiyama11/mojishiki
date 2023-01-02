@@ -188,11 +188,11 @@ class Unary(unaryString: String) :TermBase() {
         }else str=str.substring(0,a+1)+"*"+str.substring(a+1)
       }
 
-      if(str[a]==')'&&a!=str.length-1&&(str[a+1].isLetterOrDigit()||str[a+1]=='(')){
+      if(a+1<str.length&&str[a]==')'&&a!=str.length-1&&(str[a+1].isLetterOrDigit()||str[a+1]=='(')){
         str=str.substring(0,a+1)+"*"+str.substring(a+1)
       }
 
-      if(a>0&&str[a]=='('&&!validFunctions.any { str.substring(0, a).endsWith(it) }){
+      if(a+1<str.length&&a>0&&str[a]=='('&&!validFunctions.any { str.substring(0, a).endsWith(it) }){
         val char=str[a-1]
         if(char.isLetterOrDigit()){
           str = str.substring(0, a) + "*" + str.substring(a)
@@ -200,7 +200,7 @@ class Unary(unaryString: String) :TermBase() {
       }
 
       //—İæ‚Ìˆ—
-      if (str[a] == '^') {
+      if (a+1<str.length&&str[a] == '^') {
         var isBaseBrk = false
         var isFn = false
 
@@ -268,7 +268,7 @@ class Unary(unaryString: String) :TermBase() {
       a++
     }
 
-    if(str[0]=='-'&&str[a+1].isLetter()){
+    if(str.length>1&&str[0]=='-'&&str[1].isLetter()){
       str="-1*"+str.substring(1)
     }
 
