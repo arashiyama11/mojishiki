@@ -46,7 +46,7 @@ sealed class ExpressionUnit:TermBase(){
           }
           a++
         }
-        args+=str.substring(b,a-1)
+        args+=str.substring(b,str.length-1)
         Func(validFunctions[func], args.map{Polynomial(it)})
       }else{
         Letter(str[a])
