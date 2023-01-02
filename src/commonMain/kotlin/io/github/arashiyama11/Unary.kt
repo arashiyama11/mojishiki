@@ -95,7 +95,7 @@ class Unary(unaryString: String) :TermBase() {
                     tb+=copy.termBases
                   }
                 }
-              }
+              }else tb+=t
             }else tb+=t
           else->tb+=t
           }
