@@ -473,7 +473,7 @@ class Unary(unaryString: String) :TermBase() {
 
   fun exprToString(exp:List<MutableMap.MutableEntry<out TermBase,Int>>?):String{
     if(exp==null)return ""
-    return exp.mapIndexed { i, (tb,d) ->
+    return exp.let { if(it.isNotEmpty()&&it[0].key is Letter) it.sortedBy { (it.key as Letter).letter } else it }.mapIndexed { i, (tb,d) ->
       if(d==0)return@mapIndexed ""
       (if(tb is Polynomial) "($tb)" else "$tb")+when(d){
         1->""
