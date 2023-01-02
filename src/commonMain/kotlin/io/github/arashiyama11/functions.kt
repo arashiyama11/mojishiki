@@ -26,7 +26,7 @@ val specialFunctions = mapOf(
   "max" to SpecialFunction({ Unary(Rational(max(it[0], it[1]))) }, null, null),
   "pow" to SpecialFunction({
     Unary(Rational(it[0]).pow(it[1].toInt()))
-  }, null, null, { args, _ ->
+  }, null, null, { args->
     val b=args[0].toString().let { if(it.length==1) it else "($it)" }
     val d=args[1].toString().let { if(it.length==1) it else "($it)" }
     "$b^$d"
@@ -37,7 +37,5 @@ data class SpecialFunction(
   val approximation: (List<Double>) -> Unary,
   val differential: ((List<TermBase>) -> TermBase)?,
   val integral: ((List<TermBase>) -> TermBase)?,
-  val toStringFn: ((List<TermBase>, Int) -> String)? = null
+  val toStringFn: ((List<TermBase>) -> String)? = null
 )
-
-data class FunctionValue(var degree: Int, var args: List<TermBase>)

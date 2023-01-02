@@ -87,7 +87,11 @@ data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
 
   fun toFunc()=Func(name,args.toList())
 
-  override fun toString()="$name(${args.joinToString(",")})"
+  override fun toString():String{
+    return if(specialFunctions.containsKey(name)&& specialFunctions[name]!!.toStringFn!=null){
+      specialFunctions[name]!!.toStringFn!!.invoke(args)
+    }else "$name(${args.joinToString(",")})"
+  }
 
   override fun copy()=toFunc()
 
