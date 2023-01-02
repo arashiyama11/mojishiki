@@ -491,7 +491,9 @@ class Unary(unaryString: String) :TermBase() {
     var d = "${rational.denominator}${exprToString(lts[false])}${exprToString(fns[false])}${exprToString(ps[false])}"
 
     if (n.length > 1 && n[0] == '1'&&!n[1].isDigit()) n = n.substring(1)
+    else if(n.length>2&&n[0]=='-'&&n[1]=='1'&&!n[2].isDigit())n='-'+n.substring(2)
     if (d.length > 1 && d[0] == '1'&&!n[1].isDigit()) d = d.substring(1)
+    else if(d.length>2&&d[0]=='-'&&d[1]=='1'&&!d[2].isDigit())d='-'+d.substring(2)
 
     return if (d == "1") n
     else "$n/$d"
