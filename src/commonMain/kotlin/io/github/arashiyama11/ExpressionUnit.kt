@@ -47,7 +47,7 @@ sealed class ExpressionUnit:TermBase(){
           a++
         }
         args+=str.substring(b,a-1)
-        Func(validFunctions[func], args.map{Unary(it)})
+        Func(validFunctions[func], args.map{Polynomial(it)})
       }else{
         Letter(str[a])
       }
@@ -67,6 +67,8 @@ data class Letter(val letter:Char):ExpressionUnit(){
   override fun toString()=letter.toString()
 
   override fun copy()=toLetter()
+
+  override fun canBeUnary()=true
 }
 
 data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
@@ -77,9 +79,11 @@ data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
 
   fun toFunc()=Func(name,args.toList())
 
-  override fun toString(): String ="$name(${args.joinToString(",")})"
+  override fun toString()="$name(${args.joinToString(",")})"
 
   override fun copy()=toFunc()
+
+  override fun canBeUnary()=true
 }
 
 data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionUnit() {
@@ -122,6 +126,8 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
   fun toRational(): Rational {
     return Rational(numerator, denominator)
   }
+
+  override fun canBeUnary()=true
 
   override fun toUnary(): Unary {
     return Unary(listOf(toRational()))

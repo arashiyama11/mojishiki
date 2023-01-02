@@ -95,7 +95,7 @@ class Polynomial(polynomialString: String) : TermBase() {
         //x=-b/a
         listOf((cor[1] / cor[0] * Rational.MINUS_ONE).toPolynomial())
       2 -> {
-        val pols = factorization().polynomials
+        val pols = factorization().termBases
         if (pols.size == 1) {
           val a = cor[0]
           val b = cor[1]
@@ -118,10 +118,10 @@ class Polynomial(polynomialString: String) : TermBase() {
       }
       else -> {
         val facted = factorization()
-        if (facted.polynomials.size == 1) {
+        if (facted.termBases.size == 1) {
           null
         } else {
-          facted.polynomials.flatMap { it.toPolynomial().solve(letter) ?: emptyList() }
+          facted.termBases.flatMap { it.toPolynomial().solve(letter) ?: emptyList() }
         }
       }
     }
@@ -264,9 +264,9 @@ class Polynomial(polynomialString: String) : TermBase() {
     val us = unaries.filter { !it.isZero() }
     if (us.isEmpty()) return "0"
     return us
-      /*.sortedBy {
-        if (it.canBeTerm()) it.toTerm().letters['x']?.times(-1) ?: 0 else 0
-      }*/
+      .sortedBy {
+        if (it.canBeUnary()) it.toUnary().letters[Letter('x')]?.times(-1)?:0 else 0
+      }
       .mapIndexed { index, it ->
         val s = it.toString()
         if (index == 0 || s.isEmpty() || s[0] == '-') s else "+$s"
@@ -308,10 +308,21 @@ class Polynomial(polynomialString: String) : TermBase() {
       }
     }
     unaryStrings += input.substring(j).trim()
-    return unaryStrings.map { Unary(it) }.filter { it.polynomials.isNotEmpty() }
+    return unaryStrings.map { Unary(it) }.filter { it.termBases.isNotEmpty() }
   }
 
   fun arranged(letter: Char = 'x'): Polynomial {
+    var res= mutableListOf<Unary>()
+    unaries.forEach {unary->
+      val i=res.indexOfFirst { unary.hasSameFuncAndLetter(it) }
+      if(i==-1){
+        res+=unary
+      }else{
+        res[i]+=unary
+      }
+    }
+    return Polynomial(res)
+
     /*var us = mutableListOf<>()
     val a = unaries.groupBy { it.canBeTerm() }
     a[true]
@@ -376,8 +387,25 @@ class Polynomial(polynomialString: String) : TermBase() {
     return Polynomial(unaries.map { it * rational })
   }
 
+  operator fun times(letter:Letter):Polynomial{
+    return Polynomial(unaries.map{it*letter})
+  }
+
+  operator fun times(func:Func):Polynomial{
+    return Polynomial(unaries.map{it*func})
+  }
+
+  operator fun times(other:ExpressionUnit):Polynomial{
+    return Polynomial(unaries.map{it*other})
+  }
+
   override fun times(other: TermBase): TermBase {
-    TODO("Not yet implemented")
+    return when(other){
+      is ExpressionUnit->times(other)
+      is Unary->times(other)
+      is Polynomial->times(other)
+      else->throw Exception("")
+    }
   }
 
 
@@ -562,6 +590,8 @@ class Polynomial(polynomialString: String) : TermBase() {
     if (t.unaries.size != 1) return false
     return unaries[0].isOne()
   }
+
+  override fun canBeUnary()=unaries.size==1
 
   override fun toUnary(): Unary {
     if (unaries.size != 1) throw ClassCastException("Cannot be unary")

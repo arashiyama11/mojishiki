@@ -34,6 +34,32 @@ class Unary(unaryString: String) :TermBase() {
     classification()
   }
 
+  constructor(rat: Rational=Rational.ONE,lts:Map<Letter,Int>?=null,fns:Map<Func,Int>?=null,ps:Map<Polynomial,Int>?=null):this(""){
+    val tb= mutableListOf<TermBase>(Rational(rat.numerator))
+    val dtb= mutableListOf<TermBase>(Rational(rat.denominator))
+
+    lts?.forEach { (l,i)->
+      if(i>0) for(j in 0 until i) tb+=l
+      else if(i<0) for(j in 0 until -i) dtb+=l
+    }
+
+    fns?.forEach { (f,i)->
+      if(i>0) for(j in 0 until i) tb+=f
+      else if(i<0) for(j in 0 until -i) dtb+=f
+    }
+
+    ps?.forEach { (p,i)->
+      if(i>0) for(j in 1 until i) tb+=p
+      else if(i<0) for(j in 1 until -i) dtb+=p
+    }
+
+    termBases=tb
+    denoTermBases=dtb
+
+    autoEvaluate()
+    classification()
+  }
+
   companion object {
     val ZERO get() = Rational.ZERO.toUnary()
     val ONE get() = Rational.ONE.toUnary()
@@ -52,26 +78,26 @@ class Unary(unaryString: String) :TermBase() {
           dtb+=t.denoTermBases
         }
         is Func->when(t.name){
-            "pow"->if(t.args[0] is Unary&&t.args[1] is Unary){
-              val b=t.args[0] as Unary
-              val d=t.args[1] as Unary
+            "pow"->if(t.args[0].canBeUnary()&&t.args[1].canBeUnary()){
+              val b=t.args[0].toUnary()
+              val d=t.args[1].toUnary()
               if(d.canBeRational()&&b.pols.isEmpty()){
                 val a=d.toRational().toInt()
                 if(a>0){
                   for(i in 1 .. a){
-                    val copy=b.copy()
+                    val copy=b.toUnary()
                     tb+=copy.termBases
                     dtb+=copy.denoTermBases
                   }
                 }else if(a<0){
                   for(i in 1 until  -a){
-                    val copy=b.copy()
+                    val copy=b.toUnary()
                     dtb+=copy.denoTermBases
                     tb+=copy.termBases
                   }
                 }
               }
-            }
+            }else tb+=t
           else->tb+=t
           }
         else->tb+=t
@@ -277,24 +303,6 @@ class Unary(unaryString: String) :TermBase() {
     }
     if (denos.isEmpty()) denos += Rational.ONE
     return nums to denos
-    /*
-    strUnarys.filter { it.isNotEmpty() }.forEach {
-      if (it[0] == '/') {
-        denos += if (it.length > 1 && it[1] == '(' && it.last() == ')') {
-          Polynomial(it.substring(2, it.length - 1).trim())
-        } else {
-          ExpressionUnit.parse(it.substring(1).trim())
-        }
-      } else {
-        nums += if (it[0] == '(' && it.last() == ')') {
-          Polynomial(it.substring(1, it.length - 1))
-        } else {
-          ExpressionUnit.parse(it)
-        }
-      }
-    }
-    if (denos.isEmpty()) denos += Rational.ONE
-    return nums to denos*/
   }
 
   /*fun substitute(arg: Map<Char, Rational>): Unary {
@@ -382,20 +390,26 @@ class Unary(unaryString: String) :TermBase() {
         mapOf("sqrt" to FunctionValue(1, listOf(arg)))
       )
     } else ps*/
-    return ps.reduce { acc, cur ->acc*cur
+    return ps.reduce { acc, cur ->(acc*cur) }
       /*when (cur) {
         is Unary -> if (acc is Unary) acc * cur else acc.toPolynomial().evaluate() * cur
         else -> if (acc is Unary) acc * cur.toPolynomial().evaluate() else acc.toPolynomial() * cur.toPolynomial()
           .evaluate()
       }*/
     }
-  }
+
 
   fun evaluate(): TermBase {
     val u =
-      evalPs(termBases).toUnary()//.let { if (it is Polynomial) it.evaluate().factorization() else it.toUnary() }
+      evalPs(termBases)//.toPolynomial().evaluate()//.let { if (it is Polynomial) it.evaluate().factorization() else it.toUnary() }
+    return if(u is Polynomial) u.arranged() else u
+    //TODO
+    return u
     val d =
-      evalPs(denoTermBases).toUnary()/*.let { if (it is Polynomial) it.evaluate() else it }.toPolynomial().factorization()
+      evalPs(denoTermBases).toPolynomial()
+
+
+    /*.let { if (it is Polynomial) it.evaluate() else it }.toPolynomial().factorization()
     if (u.isZero()) return Rational.ZERO
     val us = (u.termBases + d.denoTermBases).toMutableList()
     val ds = (d.termBases + u.denoTermBases).toMutableList()
@@ -407,25 +421,21 @@ class Unary(unaryString: String) :TermBase() {
         us.removeAt(j)
       }
       i++
-    }*/
+    }
     val us = (u.termBases + d.denoTermBases).toMutableList()
     val ds = (d.termBases + u.denoTermBases).toMutableList()
     if (us.size == 0) us += Rational.ONE
     if (ds.size == 0) ds += Rational.ONE
 
     val result = Unary(
-      listOf(us.reduce { acc, p ->
-        if(acc is Polynomial && p is Polynomial) (acc*p).evaluate()
-        else acc*p
+      listOf(us.reduce { acc, p ->acc*p
       }),
-      listOf(ds.reduce { acc, p ->
-        if(acc is Polynomial && p is Polynomial) (acc*p).evaluate()
-        else acc*p
+      listOf(ds.reduce { acc, p ->acc*p
       })
     )
     return if (result.termBases.size == 1 && result.denoTermBases.size == 1 /*&& result.denoTermBases[0].isOne()*/) {
       result.termBases[0]
-    } else result.toPolynomial()
+    } else result.toPolynomial()*/
   }
 
   /*fun approximation(): Unary {
@@ -434,18 +444,17 @@ class Unary(unaryString: String) :TermBase() {
     )
   }*/
 
-  private fun psToString(ps: List<TermBase>, options: Set<String>?): String {
+  private fun psToString(ps: List<TermBase>, options: Set<String>?=null): String {
     val op = options ?: emptySet()
-    return ""
-    /*return ps
-      .filter { if (it is Unary) !it.isOne() else true }
-      .mapIndexed { index, it ->
+    return ps
+      .mapIndexed { i, it ->
         if(it is Polynomial){
           "($it)"
         }else{
+          if(i>0&&((ps[i-1] is Unary&&(ps[i-1] as Unary).canBeRational())||ps[i-1] is Rational)) "*$it"
+          else "$it"
         }
-
-        if (it is Unary || it.toPolynomial().unaries.size == 1) {
+        /*if (it is Unary || it.toPolynomial().unaries.size == 1) {
           val a = if (it is Unary) it else it.toTerm()
           //Œ»Ý‚Æ‘O‚ª—¼•û”Žš‚©‚Ç‚¤‚©
           val b = if (index > 0 && termBases[index - 1] is Unary) termBases[index - 1] as Unary else null
@@ -458,8 +467,8 @@ class Unary(unaryString: String) :TermBase() {
           }
         } else {
           "(${it})"
-        }
-      }.joinToString("")*/
+        }*/
+      }.joinToString("")
   }
 
   fun exprToString(exp:List<MutableMap.MutableEntry<out TermBase,Int>>?):String{
@@ -474,7 +483,6 @@ class Unary(unaryString: String) :TermBase() {
   }
 
   override fun toString(): String {
-
     val lts = letters.entries.groupBy { it.value > 0 }
     val fns = funcs.entries.groupBy { it.value > 0 }
     val ps = pols.entries.groupBy { it.value > 0 }
@@ -482,8 +490,8 @@ class Unary(unaryString: String) :TermBase() {
     var n = "${rational.numerator}${exprToString(lts[true])}${exprToString(fns[true])}${exprToString(ps[true])}"
     var d = "${rational.denominator}${exprToString(lts[false])}${exprToString(fns[false])}${exprToString(ps[false])}"
 
-    if (n.length > 1 && n[0] == '1') n = n.substring(1)
-    if (d.length > 1 && d[0] == '1') d = d.substring(1)
+    if (n.length > 1 && n[0] == '1'&&!n[1].isDigit()) n = n.substring(1)
+    if (d.length > 1 && d[0] == '1'&&!n[1].isDigit()) d = d.substring(1)
 
     return if (d == "1") n
     else "$n/$d"
@@ -508,6 +516,13 @@ class Unary(unaryString: String) :TermBase() {
     )
   }
 
+  operator fun times(letter:Letter):Unary{
+    return Unary(termBases+letter,denoTermBases.toList())
+  }
+
+  operator fun times(func:Func):Unary{
+    return Unary(termBases+func,denoTermBases.toList())
+  }
 
   operator fun times(unary: Unary): Unary {
     return Unary(termBases + unary.termBases, denoTermBases + unary.denoTermBases)
@@ -515,6 +530,23 @@ class Unary(unaryString: String) :TermBase() {
 
   operator fun times(pol: Polynomial): Unary {
     return Unary(termBases + pol, denoTermBases)
+  }
+
+  operator fun times(exp:ExpressionUnit):Unary{
+    return when(exp){
+      is Rational->times(exp)
+      is Letter->times(exp)
+      is Func->times(exp)
+    }
+  }
+
+  override fun times(other: TermBase): TermBase {
+    return when(other){
+      is ExpressionUnit->times(other)
+      is Unary->times(other)
+      is Polynomial->times(other)
+      else->throw Exception("")
+    }
   }
 
   operator fun div(double: Double): Unary {
@@ -531,8 +563,8 @@ class Unary(unaryString: String) :TermBase() {
   }
 
   operator fun plus(unary: Unary): Unary {
-    TODO()
-    //return evaluate().toPolynomial() + unary.evaluate().toPolynomial()
+    if(!hasSameFuncAndLetter(unary))throw Exception("Cannot plus")
+    return Unary(rational+unary.rational,letters,funcs,pols)
   }
 
   operator fun unaryPlus(): Unary {
@@ -564,7 +596,7 @@ class Unary(unaryString: String) :TermBase() {
     return r
   }
 
-
+  override fun canBeUnary() = true
 
   override fun toUnary(): Unary {
     return Unary(termBases.map {it.copy()
@@ -644,9 +676,6 @@ class Unary(unaryString: String) :TermBase() {
     return result
   }
 
-  override fun times(other: TermBase): TermBase {
-    TODO("Not yet implemented")
-  }
 
   override fun copy()=toUnary()
 }
