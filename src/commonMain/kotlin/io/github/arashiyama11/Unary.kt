@@ -67,7 +67,6 @@ class Unary(unaryString: String) :TermBase() {
   }
 
   private fun autoEvaluate(){
-
     val tb= mutableListOf<TermBase>()
     val dtb= mutableListOf<TermBase>()
 
@@ -169,9 +168,7 @@ class Unary(unaryString: String) :TermBase() {
   fun desuger(input:String):String{
     var a=0
     var str=input.trim()
-    if(str[0]=='-'&&str[a+1].isLetter()){
-      str="-1"+str.substring(1)
-    }
+
     while(a<str.length){
       if(str[a].isDigit()){
         while(str[a].isDigit()){
@@ -270,6 +267,11 @@ class Unary(unaryString: String) :TermBase() {
 
       a++
     }
+
+    if(str[0]=='-'&&str[a+1].isLetter()){
+      str="-1*"+str.substring(1)
+    }
+
     return str
   }
 
