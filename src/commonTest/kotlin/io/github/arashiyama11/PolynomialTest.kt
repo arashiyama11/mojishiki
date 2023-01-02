@@ -5,6 +5,11 @@ import kotlin.test.assertEquals
 
 class PolynomialTest {
   @Test
+  fun hotfix(){
+    println(Unary("xsin(x)").substitute(mapOf(Letter('x') to Polynomial("x+1"))))
+  }
+
+  @Test
   fun parseAndToStringTest(){
     assert(Polynomial("1 + 5 * 2 - 8 / 2"), "1+10-4")
     assert(Polynomial("2x^2-5x+ 3x -1"), "2x^2-5x+3x-1")
@@ -41,15 +46,18 @@ class PolynomialTest {
     assert(Polynomial("x^2/2+x").simplify(), "x^2+2x")
     assert(Polynomial("6x^2+12x+4").simplify(), "3x^2+6x+2")
     assert(Polynomial("x^3+12x^2/5+24x/5+12/5").simplify().evaluate(), "5x^3+12x^2+24x+12")
-  }
+  }*/
 
   @Test
   fun substituteTest(){
-    assert(Polynomial("x^2+x+3").substitute(mapOf('x' to Rational(1.0))).evaluate(), "5")
-    assert(Polynomial("(x+1)(x+2)-2").substitute(mapOf('x' to Rational(1.0))).evaluate(), "4")
+    assert(Polynomial("x^2+x+3").substitute(mapOf(Letter('x') to Rational(1))).evaluate(), "5")
+    assert(Polynomial("(x+1)(x+2)-2").substitute(mapOf(Letter('x') to Rational(1.0))).evaluate(), "4")
+    assert(Polynomial("x^2+y^2").substitute(mapOf(Letter('x') to Letter('y'))).evaluate(), "2y^2")
+    assert(Polynomial("x^2").substitute(mapOf(Letter('x') to Polynomial("x+1"))).evaluate(), "x^2+2x+1")
+    assert(Polynomial("sin(xsin(x))").substitute(mapOf(Letter('x') to Func("cos", listOf(Letter('x'))))).evaluate(), "sin(cos(x)sin(cos(x)))")
   }
 
-  @Test
+  /*@Test
   fun divTest(){
     assert(Polynomial("x^3-4x^2+x+6").divBy1D(Polynomial("x-2")), "(x^2-2x-3, 0)")
     assert(Polynomial("x^3-4x^2+x+6").divSafe(Polynomial("x-2")), "(x^2-2x-3, 0)")

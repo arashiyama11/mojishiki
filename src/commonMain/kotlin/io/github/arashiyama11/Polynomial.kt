@@ -1,5 +1,4 @@
 package io.github.arashiyama11
-import kotlin.math.*
 
 class Polynomial(polynomialString: String) : TermBase() {
   var unaries: List<Unary>
@@ -22,9 +21,9 @@ class Polynomial(polynomialString: String) : TermBase() {
     return Polynomial(unaries.map { it.toUnary() })
   }
 
-  /*fun substitute(arg: Map<Char, Rational>): Polynomial {
-    return Polynomial(unaries.map { it.substitute(arg) })
-  }*/
+  override fun substitute(entries: Map<Letter, TermBase>)=
+    Polynomial(unaries.map { it.substitute(entries) })
+
 
   fun evaluate(): Polynomial {
     if (unaries.isEmpty()) return Polynomial(listOf())
@@ -359,8 +358,6 @@ class Polynomial(polynomialString: String) : TermBase() {
     return this
   }
 
-
-
   operator fun plus(pol: Polynomial): Polynomial {
     val res=unaries.toMutableList()
     pol.unaries.forEach { unary->
@@ -373,7 +370,6 @@ class Polynomial(polynomialString: String) : TermBase() {
     }
     return Polynomial(res)
   }
-
 
   operator fun times(pol: Polynomial): Polynomial {
     return Polynomial(unaries.flatMap { pol.unaries.map { u -> u * it } })

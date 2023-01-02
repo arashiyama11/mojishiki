@@ -76,7 +76,7 @@ data class Letter(val letter:Char):ExpressionUnit(){
 
   override fun canBeUnary()=true
 
-
+  override fun substitute(args: Map<Letter, TermBase>)=args[this]?:this
 }
 
 data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
@@ -96,6 +96,8 @@ data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
   override fun copy()=toFunc()
 
   override fun canBeUnary()=true
+
+  override fun substitute(entries: Map<Letter, TermBase>)=Func(name,args.map{it.substitute(entries)})
 }
 
 data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionUnit() {
@@ -279,4 +281,6 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
   }
 
   override fun copy()=toRational()
+
+  override fun substitute(entries: Map<Letter, TermBase>)=this
 }

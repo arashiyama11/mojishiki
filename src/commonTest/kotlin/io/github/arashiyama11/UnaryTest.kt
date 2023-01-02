@@ -37,13 +37,13 @@ class UnaryTest {
     assert(Polynomial("(sin(x)+1)(2sin(x)+1)").evaluate(), "2sin(x)^2+3sin(x)+1")
   }
 
-  /*@Test
+  @Test
   fun substituteTest(){
-    assert(Unary("x(x+1)").substitute(mapOf('x' to Rational(1.0))).evaluate(), "2")
-    assert(Unary("(x+1)(x+3)").substitute(mapOf('x' to Rational(1.0))).evaluate(), "8")
-    assert(Unary("(x+2)(x+1)").substitute(mapOf('x' to Rational(-2.0))).evaluate(), "0")
-    assert(Unary("(x+5)^x").substitute(mapOf('x' to Rational(-2.0))).evaluate(), "1/9")
-  }*/
+    assert(Unary("x(x+1)").substitute(mapOf(Letter('x') to Rational(1.0))).evaluate(), "2")
+    assert(Unary("(x+1)(x+3)sin(2x)").substitute(mapOf(Letter('x') to Letter('y'))), "sin(2y)(y+1)(y+3)")
+    assert(Unary("(x+2)(x+1)").substitute(mapOf(Letter('x') to Unary("-3abc"))), "(-3abc+2)(-3abc+1)")
+    assert(Unary("xysin(x)").substitute(mapOf(Letter('x') to Polynomial("y+1"))), "ysin((y+1))(y+1)")
+  }
 
   private fun assert(a:Any?, b:Any?)= assertEquals(b.toString(),a.toString())
 }

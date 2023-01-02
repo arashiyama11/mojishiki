@@ -1,7 +1,5 @@
 package io.github.arashiyama11
 import kotlin.math.absoluteValue
-import kotlin.math.floor
-import kotlin.math.pow
 
 class Unary(unaryString: String) :TermBase() {
   var termBases: List<TermBase>
@@ -317,13 +315,8 @@ class Unary(unaryString: String) :TermBase() {
     return nums to denos
   }
 
-  /*fun substitute(arg: Map<Char, Rational>): Unary {
-    return Unary(termBases.map {
-      if (it is Unary) it.substitute(arg) else (it as Polynomial).substitute(arg)
-    }, denoTermBases.map {
-      if (it is Unary) it.substitute(arg) else (it as Polynomial).substitute(arg)
-    })
-  }*/
+  override fun substitute(entries: Map<Letter, TermBase>)=
+    Unary(termBases.map { it.substitute(entries) },denoTermBases.map { it.substitute(entries) })
 
   private fun evalPs(pols: List<TermBase>): TermBase {
     if (pols.isEmpty()) return Rational.ZERO

@@ -9,4 +9,5 @@ abstract class TermBase {
   fun toStringWith()=toString()
   abstract operator fun times(other: TermBase): TermBase
   abstract fun copy():TermBase
+  abstract fun substitute(entries:Map<Letter,TermBase>):TermBase
 }
