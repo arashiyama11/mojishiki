@@ -181,6 +181,16 @@ class Unary(unaryString: String) :TermBase() {
         if(a!=str.length&&str[a] !in ")/,*^") str=str.substring(0,a)+"*"+str.substring(a)
       }
 
+      if(a+1<str.length&&str[a].isLetter()&&str[a+1].isLetter()){
+        val i= validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
+        if(i>=0){
+          a+=validFunctions[i].length
+          while(str[a]!=')'){
+            a++
+          }
+        }else str=str.substring(0,a+1)+"*"+str.substring(a+1)
+      }
+
       if(str[a]==')'&&a!=str.length-1&&(str[a+1].isLetterOrDigit()||str[a+1]=='(')){
         str=str.substring(0,a+1)+"*"+str.substring(a+1)
       }
@@ -316,87 +326,24 @@ class Unary(unaryString: String) :TermBase() {
   private fun evalPs(pols: List<TermBase>): TermBase {
     if (pols.isEmpty()) return Rational.ZERO
     if (pols.any { it.toPolynomial().arranged().isZero() }) return Rational.ZERO
-    var ps = pols/*.map {
-      //pow‚Ìˆ—
-      if (it !is Unary && !it.canBeTerm()) return@map it
-      val Unary = it.toTerm()
-      if (!Unary.functions.containsKey("pow")) return@map it
-      val fn = Unary.functions["pow"]!!
-      if (!fn.args[1].canBeTerm()) return@map it
-      val t = fn.args[1].toTerm()
-      if (t.functions.isNotEmpty() || t.letters.isNotEmpty()) return@map it
-      fn.args[0].toPolynomial().pow(t.coefficient.toInt()) * Unary(
-        Unary.coefficient,
-        Unary.letters,
-        Unary.functions.filterKeys { k -> k != "pow" })
-    }*/
-
-    val sqrts = ps/*.filter { it is Unary && it.functions.containsKey("sqrt") }
-      .map { (it as Unary).toTerm() }
-    ps = if (sqrts.isNotEmpty()) {
-      //sqrt‚Ìˆ—
-      var coef = sqrts.map { Unary ->
-        Unary(
-          Unary.coefficient,
-          Unary.letters,
-          Unary.functions.filterKeys { it != "sqrt" }
-        )
-      }.reduce { acc, Unary -> acc * Unary }.toPolynomial()
-      val funs = sqrts.map { it.functions["sqrt"]!! }
-      var arg = funs.map {
-        var d = it.degree
-        val arg = it.args[0]
-        while (d !in -1..1) {
-          if (d > 1) {
-            d -= 2
-            coef *= arg.toPolynomial()
-          } else {
-            d += 2
-            coef /= arg.toTerm()
+    val ps = mutableListOf<TermBase>()
+    pols.forEach {
+      when(it){
+        is Func->when(it.name){
+            "pow"->{
+              val b=it.args[0]
+              val d=it.args[1]
+              if(d.canBeUnary()&&d.toUnary().canBeRational()){
+                for(i in 0 until d.toUnary().toRational().toInt())ps+=b
+              }else ps+=it
+            }
+            else->ps+=it
           }
-        }
-        when (d) {
-          1 -> arg
-          -1 -> Unary(listOf(Unary.ONE), listOf(arg)).toPolynomial()
-          else -> Unary.ONE
-        }
-      }.reduce { acc, tb -> if (acc is Unary && tb is Unary) acc * tb else acc.toPolynomial() * tb.toPolynomial() }
-        .toPolynomial().evaluate()
-      if (arg.canBeTerm()) {
-        var t = arg.toTerm()
-        var n = Rational.ONE
-        if (t.coefficient.toDouble() < 0) {
-          t *= -1.0
-          coef *= Unary("i")
-        }
-        divisors(t.coefficient.numerator).groupBy { it.toInt() }.forEach { (t, u) ->
-          if (u.size > 1) {
-            n *= t.toDouble().pow(floor(u.size.toDouble() / 2)).toInt()
-          }
-        }
-        divisors(t.coefficient.denominator).groupBy { it.toInt() }.forEach { (t, u) ->
-          if (u.size > 1) {
-            n /= t.toDouble().pow(floor(u.size.toDouble() / 2)).toInt()
-          }
-        }
-        arg = (t.toPolynomial() / Unary(n * n)).evaluate()
-        coef *= n
+        else->ps+=it
       }
-      ps.filter { it !is Unary || !it.functions.containsKey("sqrt") } + coef.toTerm() + if (arg.isOne()) Unary(
-        Rational.ONE
-      ) else Unary(
-        Rational.ONE,
-        null,
-        mapOf("sqrt" to FunctionValue(1, listOf(arg)))
-      )
-    } else ps*/
-    return ps.reduce { acc, cur ->(acc*cur) }
-      /*when (cur) {
-        is Unary -> if (acc is Unary) acc * cur else acc.toPolynomial().evaluate() * cur
-        else -> if (acc is Unary) acc * cur.toPolynomial().evaluate() else acc.toPolynomial() * cur.toPolynomial()
-          .evaluate()
-      }*/
     }
+    return ps.reduce { acc, cur ->(acc*cur) }
+  }
 
 
   fun evaluate(): TermBase {
