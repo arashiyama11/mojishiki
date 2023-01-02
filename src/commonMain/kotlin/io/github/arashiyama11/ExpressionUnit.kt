@@ -54,7 +54,13 @@ sealed class ExpressionUnit:TermBase(){
     }
   }
 
-  override operator fun times(other:TermBase)=Unary(listOf(this,other)).toPolynomial()
+  override fun times(other: TermBase): TermBase {
+    return when(other){
+      is Polynomial,is Unary->other.times(this)
+      is ExpressionUnit->Unary(listOf(this,other))
+      else->throw Exception("")
+    }
+  }
 }
 
 data class Letter(val letter:Char):ExpressionUnit(){
@@ -69,6 +75,8 @@ data class Letter(val letter:Char):ExpressionUnit(){
   override fun copy()=toLetter()
 
   override fun canBeUnary()=true
+
+
 }
 
 data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
