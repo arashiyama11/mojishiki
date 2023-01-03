@@ -10,4 +10,5 @@ abstract class TermBase {
   abstract operator fun times(other: TermBase): TermBase
   abstract fun copy():TermBase
   abstract fun substitute(entries:Map<Letter,TermBase>):TermBase
+  abstract fun approximation():TermBase
 }

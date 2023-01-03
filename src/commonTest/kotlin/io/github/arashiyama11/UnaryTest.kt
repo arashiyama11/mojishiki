@@ -45,5 +45,13 @@ class UnaryTest {
     assert(Unary("xysin(x)").substitute(mapOf(Letter('x') to Polynomial("y+1"))), "ysin((y+1))(y+1)")
   }
 
+  @Test
+  fun approximationTest(){
+    assert(Unary("3xcos(0)").approximation(),"3x")
+    assert(Unary("3xcos(x)").approximation(),"3xcos(x)")
+    assert(Unary("-5xyz").approximation(),"-5xyz")
+    assert(Unary("max(5,2)min(3,-2)abs(-12i)").approximation(),"-10abs(-12i)")
+  }
+
   private fun assert(a:Any?, b:Any?)= assertEquals(b.toString(),a.toString())
 }

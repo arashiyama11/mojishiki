@@ -5,11 +5,6 @@ import kotlin.test.assertEquals
 
 class PolynomialTest {
   @Test
-  fun hotfix(){
-    println(Unary("xsin(x)").substitute(mapOf(Letter('x') to Polynomial("x+1"))))
-  }
-
-  @Test
   fun parseAndToStringTest(){
     assert(Polynomial("1 + 5 * 2 - 8 / 2"), "1+10-4")
     assert(Polynomial("2x^2-5x+ 3x -1"), "2x^2-5x+3x-1")
@@ -55,6 +50,12 @@ class PolynomialTest {
     assert(Polynomial("x^2+y^2").substitute(mapOf(Letter('x') to Letter('y'))).evaluate(), "2y^2")
     assert(Polynomial("x^2").substitute(mapOf(Letter('x') to Polynomial("x+1"))).evaluate(), "x^2+2x+1")
     assert(Polynomial("sin(xsin(x))").substitute(mapOf(Letter('x') to Func("cos", listOf(Letter('x'))))).evaluate(), "sin(cos(x)sin(cos(x)))")
+  }
+
+  @Test
+  fun approximationTest(){
+    assert(Polynomial("max(2,3)-min(2,3)").approximation(),"3-2")
+    assert(Polynomial("sin(0)cos(0)-sqrt(4)").approximation(),"-2")
   }
 
   /*@Test

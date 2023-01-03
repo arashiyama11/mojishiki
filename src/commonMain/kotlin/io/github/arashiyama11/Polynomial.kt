@@ -33,9 +33,9 @@ class Polynomial(polynomialString: String) : TermBase() {
     } else result
   }
 
-  /*fun approximation(): Polynomial {
-    return Polynomial(unaries.map { it.approximation() })
-  }*/
+  override fun approximation()
+    =Polynomial(unaries.map { it.approximation() })
+
 
   //®‚ÌŒW”‚ğŠÈ’P‚É‚·‚é
   /*fun simplify(): Polynomial {

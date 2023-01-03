@@ -23,5 +23,18 @@ class ExpressionUnitTest {
     assert(parse("pow(x,3x+1)"),"x^(3x+1)")
   }
 
+  @Test
+  fun approximationTest(){
+    assert(Letter('x').approximation(),"x")
+    assert(Rational(3,2).approximation(),"3/2")
+
+    assert(Func("sin",listOf(Rational(0))).approximation(),"0")
+    assert(Func("cos",listOf(Rational(0))).approximation(),"1")
+    assert(Func("cos",listOf(Letter('x'))).approximation(),"cos(x)")
+    assert(Func("max",listOf(Unary("0"), Unary("4"))).approximation(),"4")
+    assert(Func("min",listOf(Unary("0"),Unary("4"))).approximation(),"0")
+    assert(Func("sqrt",listOf(Polynomial("-4"))).approximation(),"2i")
+    assert(Func("pow",listOf(Polynomial("3x"),Polynomial("5y"))).approximation(),"(3x)^(5y)")
+  }
   private fun assert(a:Any?, b:Any?)= assertEquals(b.toString(),a.toString())
 }

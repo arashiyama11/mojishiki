@@ -380,13 +380,12 @@ class Unary(unaryString: String) :TermBase() {
     } else result.toPolynomial()*/
   }
 
-  /*fun approximation(): Unary {
-    return Unary(termBases.map { if (it is Unary) it.approximation() else (it as Polynomial).approximation() },
-      denoTermBases.map { if (it is Unary) it.approximation() else (it as Polynomial).approximation() }
-    )
-  }*/
+  override fun approximation()
+    =Unary(termBases.map{it.approximation()},denoTermBases.map{it.approximation()})
+
 
   private fun psToString(ps: List<TermBase>, options: Set<String>?=null): String {
+
     val op = options ?: emptySet()
     return ps
       .mapIndexed { i, it ->
