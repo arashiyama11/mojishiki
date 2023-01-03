@@ -28,10 +28,10 @@ class ExpressionUnitTest {
     assert(Letter('x').approximation(),"x")
     assert(Rational(3,2).approximation(),"3/2")
 
-    assert(Func("sin",listOf(Rational(0))).approximation(),"0")
+    assert(Func("sin",Rational(0)).approximation(),"0")
     assert(Func("cos",listOf(Rational(0))).approximation(),"1")
     assert(Func("cos",listOf(Letter('x'))).approximation(),"cos(x)")
-    assert(Func("max",listOf(Unary("0"), Unary("4"))).approximation(),"4")
+    assert(Func("max",Unary("0"), Unary("4")).approximation(),"4")
     assert(Func("min",listOf(Unary("0"),Unary("4"))).approximation(),"0")
     assert(Func("sqrt",listOf(Polynomial("-4"))).approximation(),"2i")
     assert(Func("pow",listOf(Polynomial("3x"),Polynomial("5y"))).approximation(),"(3x)^(5y)")

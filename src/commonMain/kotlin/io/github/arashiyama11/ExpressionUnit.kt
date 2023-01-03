@@ -83,6 +83,8 @@ data class Letter(val letter:Char):ExpressionUnit(){
 
 data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
 
+  constructor(name: String, vararg args: TermBase):this(name,args.toList())
+
   override fun toPolynomial()= Polynomial(listOf(toUnary()))
 
   override fun toUnary()=Unary(listOf(toFunc()))
