@@ -375,6 +375,10 @@ class Polynomial(polynomialString: String) : TermBase() {
     return Polynomial(unaries.flatMap { pol.unaries.map { u -> u * it } })
   }
 
+  operator fun times(unary: Unary):Polynomial{
+    return Polynomial(unaries.map{ it * unary })
+  }
+
   operator fun times(Double: Double): Polynomial {
     return Polynomial(unaries.map { it * Double })
   }
