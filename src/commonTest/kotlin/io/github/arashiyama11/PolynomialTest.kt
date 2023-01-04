@@ -71,19 +71,20 @@ class PolynomialTest {
     assert(Polynomial("2x^2+3x+1").divSafe(Polynomial("x+1/2")), "(2x+2, 0)")
     assert(Polynomial("(3x+2)(2x+1)").evaluate().divSafe(Polynomial("x+2/3")), "(6x+3, 0)")
   }
-  /*
+
   @Test
   fun factorizationTest(){
     assert(Polynomial("6x^2+7x+2").factorization(), "(2x+1)(3x+2)")
     assert(Polynomial("3x^2-2x-1").factorization(), "(x-1)(3x+1)")
     assert(Polynomial("x^3+2x^2-2x-12").factorization(), "(x-2)(x^2+4x+6)")
-    assert(Polynomial("x^3-3x-2").factorization(), "(x+1)(x+1)(x-2)")
+    assert(Polynomial("x^3-3x-2").factorization(), "(x+1)^2(x-2)")
     assert(Polynomial("6x^3+x^2+2x-1").factorization(), "(3x-1)(2x^2+x+1)")
     assert(Polynomial("2x^4+2x^3-4x^2-16x").factorization(), "2x(x-2)(x^2+3x+4)")
-    assert(Polynomial("2a^2+2ax+ab+bx").factorization(), "(x+a)(2a+b)")
-    assert(Polynomial("(a+b)(b+c)(c+a)").evaluate().factorization(), "(a+c)(b+a)(b+c)")
+    assert(Polynomial("2a^2+2ax+ab+bx").factorization(), "(x+a)(b+2a)")
+    assert(Polynomial("(a+b)(b+c)(c+a)").evaluate().factorization(), "(a+b)(c+a)(b+c)")
   }
 
+  /*
   fun solveTest(){
     assert(Polynomial("2x-4").solve(), "[2]")
     assert(Polynomial("2a-4").solve('a'), "[2]")

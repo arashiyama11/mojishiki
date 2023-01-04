@@ -1,5 +1,8 @@
 package io.github.arashiyama11
 
+import kotlin.math.abs
+import kotlin.math.absoluteValue
+
 class Polynomial(polynomialString: String) : TermBase() {
   var unaries: List<Unary>
 
@@ -125,86 +128,6 @@ class Polynomial(polynomialString: String) : TermBase() {
     }
   }
 
-  //因数分解
-  //有理数範囲
-  fun factorization(): Unary {
-    val terms = unaries.map { it.toTerm() }
-    if (terms.isEmpty()) return Unary.ZERO
-    //letterは最高次の文字                このtoMutableMapがないと参照の問題でバグる
-    val letter = terms.map { it.letters.toMutableMap() }.reduceOrNull { acc, mutableMap ->
-      mutableMap.forEach {
-        if (acc.containsKey(it.key)) {
-          acc[it.key] = acc[it.key]!! + it.value
-        } else {
-          acc[it.key] = it.value
-        }
-      }
-      acc
-    }?.maxByOrNull { it.value }?.key
-      ?: return if (terms.any { it.functions.isNotEmpty() })
-        Unary("(${terms.joinToString("+")})")
-      else Unary(divisors(
-        terms[0].coefficient.numerator
-      ).map { Unary(it.toString()) },
-        divisors(terms[0].coefficient.denominator).map { Unary(it.toString()) }
-      )
-
-    //一次式以下ならそのまま返す
-    if (terms.maxOf { it.letters[letter] ?: 0 } <= 1) {
-      return Unary("(${terms.joinToString("+")})")
-    }
-
-
-    //定数でくくれるか
-    val mt = Rational(
-      terms.map { abs(it.coefficient.numerator) }.reduce { acc, l -> gcd(acc, l) },
-      terms.map { abs(it.coefficient.denominator) }.reduce { acc, Unary -> acc * Unary / gcd(acc, Unary) }
-    )
-
-    if (mt.numerator != 1L || mt.denominator != 1L) {
-      val d = Unary(mt)
-      return Unary(listOf(d)) * Polynomial(terms.map { (it / d).toUnary() }).factorization()
-    }
-    //係数が1の項でくくれるか
-    val minDeg = terms.minOf { it.letters[letter] ?: 0 }
-    if (minDeg > 0) {
-      val d = Unary(Rational.ONE, mapOf(letter to minDeg))
-      return d.toUnary() * Polynomial(terms.map { (it / d).toUnary() }).factorization()
-    }
-
-    val const = terms.find { it.letters.isEmpty() || it.letters[letter] == null } ?: Unary.ZERO
-    val max = terms.reduce { acc, Unary -> if ((Unary.letters[letter] ?: 0) > (acc.letters[letter] ?: 0)) Unary else acc }
-
-    //分母は必ず1になっている
-    if (const.coefficient.denominator != 1L || max.coefficient.denominator != 1L) throw PolynomialDivBy1DException("Highest order denominator must be 1")
-
-    val cdivs = (divisors(const.coefficient.numerator) + 1)
-      .flatMap { listOf(it, -it) }.filter { it != 0L }.distinct().sortedBy { abs(it) }
-    var clts = listOf(Unary.ONE, Unary.MINUS_ONE)
-    const.letters.entries.forEach { (c, i) ->
-      clts = if (clts.isEmpty()) List(i + 1) { Unary(Rational.ONE, mapOf(c to it)) }
-      else clts.flatMap { t -> List(i + 1) { t * Unary(Rational.ONE, mapOf(c to it)) } }
-    }
-    val mdivs = (divisors(max.coefficient.numerator) + 1).distinct().sortedBy { abs(it) }
-    var mlts = listOf(Unary.ONE)
-    max.letters.entries.filter { it.key != letter }.forEach { (c, i) ->
-      mlts = if (mlts.isEmpty()) List(i + 1) { Unary(Rational.ONE, mapOf(c to it)) }
-      else mlts.flatMap { t -> List(i + 1) { t * Unary(Rational.ONE, mapOf(c to it)) } }
-    }
-
-    val cs = cdivs.flatMap { a -> clts.map { it * Rational(a) } }
-    val ms = mdivs.flatMap { a -> mlts.map { it * Rational(a) * Unary(Rational.ONE, mapOf(letter to 1)) } }
-    for (m in ms) {
-      for (c in cs) {
-        val d = (m.toPolynomial() + c.toPolynomial()).evaluate()
-        val p = Polynomial(terms.map { it.toUnary() }).divBy1D(d, letter)
-        if (p.second.coefficient.numerator == 0L) {
-          return Unary(listOf(d)) * Polynomial(p.first.unaries.filter { !it.isZero() }).factorization()
-        }
-      }
-    }
-    return Unary("(${terms.joinToString("+")})")
-  }
 
   fun differential(letter: Char = 'x'): Polynomial {
     val terms = evaluate().unaries.map { it.toTerm() }
@@ -257,6 +180,60 @@ class Polynomial(polynomialString: String) : TermBase() {
       ).toUnary()
     }.toList()) + Unary(Rational.ONE, mapOf('C' to 1)).toPolynomial()
   }*/
+
+  fun factorization(): Unary {
+    val us=unaries.map{it.copy()}
+    if(us.isEmpty())return Unary.ONE
+    val letter=us.map{it.letters.maxByOrNull { v -> v.value }}.maxByOrNull { it?.value?:0 }!!.key
+    if(us.maxOfOrNull { it.letters.values.maxOrNull()?:0 }==1)return Unary(this)
+    val mt=Rational(
+      us.map { it.rational.numerator }.reduce { acc, l -> gcd(acc,l) },
+      us.map { it.rational.denominator }.reduce { acc, l -> gcd(acc,l) }
+    ).reduction()
+
+    if(mt.numerator.absoluteValue!=1L||mt.denominator.absoluteValue!=1L){
+      return mt.toUnary()*div(mt).factorization()
+    }
+
+    val minDeg=us.minOf { it.letters[letter]?:0 }
+
+    if(minDeg>0){
+      val u=Unary(lts = mapOf(letter to minDeg))
+      return u*div(u).factorization()
+    }
+
+    //定数項
+    val const=us.find { !it.letters.containsKey(letter) } ?:Unary.ZERO
+    val max=us.reduce { acc, u -> if((u.letters[letter]?:0)>(acc.letters[letter]?:0)) u else acc }
+
+    val cdivs=(divisors(const.rational.numerator)+1).flatMap { listOf(it,-it) }.filter{it!=0L}.distinct().sortedBy { abs(it) }
+    var clts= listOf(Unary.ONE, Unary.MINUS_ONE)
+    const.letters.entries.forEach { (l,i)->
+      clts=if(clts.isEmpty()) List(i+1){ Unary(lts= mapOf(l to it)) }
+      else clts.flatMap { t->List(i+1){ t*Unary(lts= mapOf(l to it)) } }
+    }
+
+    val mdivs=(divisors(max.rational.numerator)+1).flatMap { listOf(it,-it) }.filter{it!=0L}.distinct().sortedBy { abs(it) }
+    var mlts= listOf(Unary.ONE, Unary.MINUS_ONE)
+    max.letters.entries.forEach { (l,i)->
+      mlts=if(mlts.isEmpty()) List(i+1){ Unary(lts= mapOf(l to it)) }
+      else mlts.flatMap { t->List(i+1){ t*Unary(lts= mapOf(l to it)) } }
+    }
+
+    val cs=cdivs.flatMap { l->clts.map{it*Rational(l)} }
+    val ms=mdivs.flatMap { l->clts.map{it*Rational(l)*Unary(lts = mapOf(letter to 1))} }
+
+    for(m in ms){
+      for(c in cs){
+        val d=(m.toPolynomial()+c.toPolynomial()).evaluate()
+        val p=Polynomial(us.map{it.copy()}).divSafe(d)
+        if(p.second.evaluate().isZero()){
+          return Unary(d)*Polynomial(p.first.unaries.filter { !it.isZero() }).factorization()
+        }
+      }
+    }
+    return Unary(this)
+  }
 
   override fun toString(): String {
     val us = unaries.filter { !it.isZero() }
@@ -409,6 +386,10 @@ class Polynomial(polynomialString: String) : TermBase() {
 
   operator fun div(Double: Double): Polynomial {
     return times(1 / Double)
+  }
+
+  operator fun div(rational: Rational):Polynomial{
+    return times(rational.reciprocal())
   }
 
   operator fun div(Unary: Unary): Polynomial {
