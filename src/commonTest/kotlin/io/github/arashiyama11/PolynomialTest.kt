@@ -58,22 +58,20 @@ class PolynomialTest {
     assert(Polynomial("sin(0)cos(0)-sqrt(4)").approximation(),"-2")
   }
 
-  /*@Test
+  @Test
   fun divTest(){
-    assert(Polynomial("x^3-4x^2+x+6").divBy1D(Polynomial("x-2")), "(x^2-2x-3, 0)")
     assert(Polynomial("x^3-4x^2+x+6").divSafe(Polynomial("x-2")), "(x^2-2x-3, 0)")
-    assert(Polynomial("x^2+4x+3").divBy1D(Polynomial("x+1")), "(x+3, 0)")
-    assert(Polynomial("(x+2)(x+1)(x+3)").evaluate().divBy1D(Polynomial("x+1")), "(x^2+5x+6, 0)")
+    assert(Polynomial("x^2+4x+3").divSafe(Polynomial("x+1")), "(x+3, 0)")
     assert(Polynomial("(x+2)(x+1)(x+3)").evaluate() / Polynomial("x^2+5x+6"), "x+1")
-    assert(Polynomial("x^2+x+3").divBy1D(Polynomial("x+1")), "(x, 3)")
-    assert(Polynomial("x^2+xy+y").divBy1D(Polynomial("x+y")), "(x, y)")
+    assert(Polynomial("x^2+x+3").divSafe(Polynomial("x+1")), "(x, 3)")
     assert(Polynomial("x^2+xy+y").divSafe(Polynomial("x+y")), "(x, y)")
-    assert(Polynomial("a^2-a-6").divBy1D(Polynomial("a-3"), 'a'), "(a+2, 0)")
+    assert(Polynomial("x^2+xy+y").divSafe(Polynomial("x+y")), "(x, y)")
+    assert(Polynomial("a^2-a-6").divSafe(Polynomial("a-3")), "(2+a, 0)")
     assert(Polynomial("a^2-a-8").divSafe(Polynomial("a-3")), "(2+a, -2)")
-    assert(Polynomial("2x^2+3x+1").divBy1D(Polynomial("x+1/2")), "(2x+2, 0)")
-    assert(Polynomial("(3x+2)(2x+1)").evaluate().divBy1D(Polynomial("x+2/3")), "(6x+3, 0)")
+    assert(Polynomial("2x^2+3x+1").divSafe(Polynomial("x+1/2")), "(2x+2, 0)")
+    assert(Polynomial("(3x+2)(2x+1)").evaluate().divSafe(Polynomial("x+2/3")), "(6x+3, 0)")
   }
-
+  /*
   @Test
   fun factorizationTest(){
     assert(Polynomial("6x^2+7x+2").factorization(), "(2x+1)(3x+2)")

@@ -409,7 +409,7 @@ class Polynomial(polynomialString: String) : TermBase() {
   }
 
 
-  /*operator fun div(Double: Double): Polynomial {
+  operator fun div(Double: Double): Polynomial {
     return times(1 / Double)
   }
 
@@ -419,13 +419,9 @@ class Polynomial(polynomialString: String) : TermBase() {
 
   //余りが0のときだけ返す
   operator fun div(pol: Polynomial): Polynomial {
-    val (res, t) = divSafe(pol) ?: return Unary("(${toString()})/(${pol})").toPolynomial()
-    return if (t.isZero()) {
-      res
-    } else {
-      Unary("(${toString()})/(${pol})").toPolynomial()
-    }
-  }*/
+    val (res, t) = divSafe(pol)
+    return if (t.isZero()) res else Unary("(${toString()})/(${pol})").toPolynomial()
+  }
 
   operator fun unaryPlus(): Polynomial {
     return toPolynomial()
@@ -456,121 +452,45 @@ class Polynomial(polynomialString: String) : TermBase() {
     return r.evaluate()
   }
 
-  //商と余りを返す
-  /*fun divSafe(pol: Polynomial): Pair<Polynomial, Polynomial>? {
-    if (pol.canBeTerm()) return this / pol.toTerm() to Polynomial("0")
-    if (canBeTerm() && pol
-        .canBeTerm()
-    ) return (toTerm() / pol.toTerm()).toPolynomial() to Polynomial("0")
-    val terms = evaluate().unaries.map { it.toTerm() }
-    val dTerms = pol.evaluate().unaries.map { it.toTerm() }
-    //注目する文字は割る方の最高次の文字
-    val dds = dTerms.map { it.letters.values.maxOrNull() }
-    //割る方の式の次数がすべて同じときは割られる方の最高次にする
-    val letter = if (dds.groupBy { it }.size == 1) {
-      val maxTerm = terms.maxBy { it.letters.values.maxOrNull() ?: 0 }
-      maxTerm.letters.entries.maxBy { it.value }.key
-    } else {
-      val maxTerm = dTerms.maxBy { it.letters.values.maxOrNull() ?: 0 }
-      maxTerm.letters.entries.maxBy { it.value }.key
-    }
+  fun divSafe(pol:Polynomial):Pair<Polynomial,Polynomial>{
+    if(canBeUnary()&&pol.canBeUnary())return (toUnary()/pol.toUnary()).toPolynomial() to ZERO
+    val unaries=evaluate().unaries
+    val dUnaries=pol.evaluate().unaries
+    val letter=dUnaries.map{it.letters.maxByOrNull { it.value }}.maxByOrNull { it?.value?:0 }!!.key
+    //letterのみを除いて降べきにする
 
-    //xのみを除いて降べきにする
-    val a = List(terms.size) { d ->
-      val ts = terms.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
-      if (ts.isEmpty()) return@List ONE
-      else ts.map { it.toPolynomial() / Unary(Rational.ONE, mapOf(letter to d)) }
-        .reduce { acc, pol -> acc + pol }.toPolynomial()
+    val a=List(unaries.maxOf { it.letters[letter]?:0 }+1){d->
+      val us=unaries.filter{it.letters[letter]==d  || d == 0 && it.letters[letter] == null}
+      if (us.isEmpty()) return@List ONE
+      else us.map{Unary(it.rational,it.letters.filterKeys { k -> k!=letter },it.funcs,it.pols).toPolynomial()}.reduce { acc, p -> acc+p }
     }.reversed().toMutableList()
 
-    val b = List(dTerms.size) { d ->
-      val ts = dTerms.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
-      if (ts.isEmpty()) return@List ONE
-      else ts.map { it.toPolynomial() / Unary(Rational.ONE, mapOf(letter to d)) }
-        .reduce { acc, pol -> acc + pol }.toPolynomial()
-    }.reversed()
+    val b=List(dUnaries.maxOf { it.letters[letter]?:0 }+1){d->
+      val us=dUnaries.filter{it.letters[letter]==d  || d == 0 && it.letters[letter] == null}
+      if (us.isEmpty()) return@List ONE
+      else us.map{Unary(it.rational,it.letters.filterKeys { k -> k!=letter },it.funcs,it.pols).toPolynomial()}.reduce { acc, p -> acc+p }
+    }.reversed().toMutableList()
 
-    val result = mutableListOf<TermBase>()
-    for (i in 0 until a.size - b.size + 1) {
-      val r = a[i] / b[0]
+    val result= mutableListOf<TermBase>()
+    for (i in 0 .. a.size - b.size) {
+      val r = Unary(a[i].evaluate(),b[0]).evaluate()
       result += r
       val mi = b.map { it * r }
       mi.forEachIndexed { index, p ->
-        a[index + i] = a[index + i] + -p
+        a[index + i] = (a[index + i] + -p.toPolynomial()).evaluate()
       }
     }
-    if (result.isEmpty()) return null
 
-    result.reverse()
     a.reverse()
-    return Pair(List(result.size) {
-      result[it].toPolynomial() * Unary(
-        Rational.ONE,
-        mapOf(letter to it)
-      )
-    }.reduce { acc, p -> acc + p },
+    result.reverse()
+
+    return List(result.size) {
+      result[it].toPolynomial() * Unary(lts=mapOf(letter to it))
+    }.reduce { acc, p -> acc + p }.evaluate() to
       List(a.size) {
-        a[it].toPolynomial() * Unary(
-          Rational.ONE,
-          mapOf(letter to it)
-        )
-      }.reduce { acc, p -> acc + p }
-    )
+        a[it].toPolynomial() * Unary(lts=mapOf(letter to it))
+      }.reduce { acc, p -> acc + p }.evaluate()
   }
-
-  private class PolynomialDivBy1DException(e: String) : Exception(e)
-
-  //一次式でわる
-  //結果と余りを返す
-  //nx±mの形のみ
-  fun divBy1D(pol: Polynomial, letter: Char = 'x'): Pair<Polynomial, Unary> {
-    var terms = pol.evaluate().unaries.map { it.toTerm() }
-    if (terms.maxOf { it.letters[letter] ?: 0 } != 1) {
-      throw PolynomialDivBy1DException("The arg is not 1D")
-    }
-
-    //組み立て除法でとく
-    //xの係数が1でない時は定数倍して1にしてから計算し、最後に元に戻す
-    val oneDegCoef = terms.find { it.letters[letter] == 1 }!!.coefficient.reduction()
-    terms = terms.map { it * oneDegCoef.reciprocal() }
-    //組み立て除法の上の段から順にa,b result
-
-    val dived = evaluate().unaries.map { it.toTerm() }
-    //割られるほうの式の次数
-    val divedMaxDeno = dived.maxOf { it.letters[letter] ?: 0 }
-    val t =
-      terms.find { it.letters.isEmpty() || it.letters[letter] == 0 || it.letters[letter] == null }!!.times(-1.0)
-    val a = List(divedMaxDeno + 1) { d ->
-      //xのみを除いたかんじにする
-      val ts = dived.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
-      if (ts.isEmpty()) Unary.ZERO
-      else ts.map { it.toPolynomial() / Unary(Rational.ONE, mapOf(letter to d)) }
-        .reduce { acc, pol -> acc + pol }
-    }.reversed()
-    val b = mutableListOf<TermBase>()
-    val result = mutableListOf(a[0])
-
-    for (i in 0 until divedMaxDeno) {
-      b += t * result.last().toPolynomial()
-      result += b.last().toPolynomial() + a[i + 1].toPolynomial()
-    }
-
-    val s = result.slice(0 until divedMaxDeno)
-      .mapIndexed { index, tb ->
-        tb.toPolynomial() / Unary(oneDegCoef) * Unary(
-          Rational.ONE,
-          mapOf(letter to divedMaxDeno - index - 1)
-        )
-      }
-    return Pair(
-      s.reduceOrNull { acc, cur -> acc + cur } ?: ZERO,
-      result.last().toPolynomial().evaluate().unaries.filter { !it.isZero() }
-        .reduceOrNull { acc, cur -> acc * cur }?.evaluate()?.toPolynomial()?.unaries?.get(0)?.toTerm() ?: Unary.ZERO
-
-    )
-  }*/
-
-
 
   override fun equals(other: Any?): Boolean {
     if (other is Polynomial) {
@@ -591,6 +511,8 @@ class Polynomial(polynomialString: String) : TermBase() {
     return unaries[0].isOne()
   }
 
+  fun canBeRational()=canBeUnary()&&toUnary().canBeRational()
+
   override fun canBeUnary()=unaries.size==1
 
   override fun toUnary(): Unary {
@@ -600,6 +522,7 @@ class Polynomial(polynomialString: String) : TermBase() {
 
   override fun hashCode()=unaries.hashCode()
 
-
   override fun copy()=toPolynomial()
+
+  fun reciprocal()=Unary(dp = toPolynomial())
 }

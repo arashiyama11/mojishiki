@@ -68,7 +68,7 @@ class Unary(unaryString: String) :TermBase() {
     val tb= mutableListOf<TermBase>()
     val dtb= mutableListOf<TermBase>()
 
-    for(t in termBases){
+    for(t in termBases.map{if(it is Polynomial&&it.canBeUnary()) it.toUnary() else it}){
       when(t){
         is Unary->{
           tb+=t.termBases
@@ -101,7 +101,7 @@ class Unary(unaryString: String) :TermBase() {
       }
     }
 
-    for(t in denoTermBases){
+    for(t in denoTermBases.map{if(it is Polynomial&&it.canBeUnary()) it.toUnary() else it}){
       when(t){
         is Unary->{
           tb+=t.denoTermBases
@@ -343,13 +343,10 @@ class Unary(unaryString: String) :TermBase() {
 
   fun evaluate(): TermBase {
     val u =
-      evalPs(termBases)//.toPolynomial().evaluate()//.let { if (it is Polynomial) it.evaluate().factorization() else it.toUnary() }
-    return if(u is Polynomial) u.arranged() else u
-    //TODO
-    return u
+      evalPs(termBases).let{if(it is Polynomial) it.arranged() else it}//.toPolynomial().evaluate()//.let { if (it is Polynomial) it.evaluate().factorization() else it.toUnary() }
     val d =
-      evalPs(denoTermBases).toPolynomial()
-
+      evalPs(denoTermBases).let{if(it is Polynomial) it.arranged() else it}
+    return if(d.toString()=="1") u else Unary(u,d)
 
     /*.let { if (it is Polynomial) it.evaluate() else it }.toPolynomial().factorization()
     if (u.isZero()) return Rational.ZERO
@@ -589,7 +586,6 @@ class Unary(unaryString: String) :TermBase() {
     return false
   }
 
-
   private fun divisors(long: Long): MutableList<Long> {
     var n = long
     var i = 2L
@@ -619,6 +615,7 @@ class Unary(unaryString: String) :TermBase() {
     return result
   }
 
-
   override fun copy()=toUnary()
+
+  fun reciprocal()=Unary(denoTermBases.map{it.copy()},termBases.map{it.copy()})
 }
