@@ -513,28 +513,24 @@ class Unary(unaryString: String) :TermBase() {
     return Polynomial(listOf(toUnary()))
   }
 
-  fun isZero(): Boolean {
-    return termBases.any {
-      if(it is Polynomial){
-        it.isZero()
-      }else when(it as ExpressionUnit) {
-        is Letter -> false
-        is Func -> false
-        is Rational -> (it as Rational).numerator == 0L
-      }
+  fun isZero(): Boolean = termBases.any {
+    when(it) {
+      is Polynomial->it.isZero()
+      is Unary->it.rational.numerator==0L
+      is Rational->it.numerator==0L
+      else->false
     }
   }
 
-  fun isOne(): Boolean {
-    val t = evaluate()
-    return if(t is Polynomial){
-      t.isOne()
-    }else when(t as ExpressionUnit){
-      is Letter->false
-      is Func->false
-      is Rational->(t as Rational).numerator==1L
+  fun isOne(): Boolean = evaluate().let {
+    when(it){
+      is Polynomial->it.isOne()
+      is Unary->it.rational.toDouble()==1.0
+      is Rational->it.toDouble()==1.0
+      else ->false
     }
   }
+
 
   fun toRational():Rational{
     if(!canBeRational()) throw ClassCastException("")
