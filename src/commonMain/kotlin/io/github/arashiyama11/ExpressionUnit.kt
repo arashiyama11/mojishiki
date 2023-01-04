@@ -277,9 +277,15 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
   }
 
   fun pow(i: Int): Rational {
-    var r = toRational()
-    for (a in 1 until i) {
-      r *= this
+    var j=i
+    var r = ONE
+    val t=if(j==0)return ONE
+    else if(j<0){
+      j=-j
+      reciprocal()
+    }else this
+    for (a in 0 until j) {
+      r *= t
     }
     return r
   }
