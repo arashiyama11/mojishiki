@@ -24,7 +24,6 @@ class Polynomial(polynomialString: String) : TermBase() {
   override fun substitute(entries: Map<Letter, TermBase>)=
     Polynomial(unaries.map { it.substitute(entries) })
 
-
   fun evaluate(): Polynomial {
     if (unaries.isEmpty()) return Polynomial(listOf())
     val result = Polynomial(unaries.filter { !it.isZero() }.flatMap { it.evaluate().toPolynomial().unaries }).arranged()
@@ -407,7 +406,6 @@ class Polynomial(polynomialString: String) : TermBase() {
       else->throw Exception("")
     }
   }
-
 
   operator fun div(Double: Double): Polynomial {
     return times(1 / Double)
