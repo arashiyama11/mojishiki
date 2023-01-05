@@ -2,122 +2,122 @@ package io.github.arashiyama11
 
 import kotlin.math.*
 
-sealed class ExpressionUnit:TermBase(){
-  companion object{
-    fun parse(input:String):ExpressionUnit{
-      val str=input.trim()
-      var a=0
-      val isMinus=if(str[a]=='-'){
+sealed class ExpressionUnit : TermBase() {
+  companion object {
+    fun parse(input: String): ExpressionUnit {
+      val str = input.trim()
+      var a = 0
+      val isMinus = if (str[a] == '-') {
         a++
         true
-      }else if(str[a]=='+'){
+      } else if (str[a] == '+') {
         a++
         false
-      }else false
+      } else false
 
-      while(str[a].isWhitespace())a++
+      while (str[a].isWhitespace()) a++
 
-      val func= validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
-      return if(str[a].isDigit()){
+      val func = validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
+      return if (str[a].isDigit()) {
         //®”A¬”A•ª”
-        val numStart=a
-        val num=str.substring(a).takeWhile {
+        val numStart = a
+        val num = str.substring(a).takeWhile {
           a++
           it.isDigit()
         }
-        when(str[a-1]){
-          '.'->Rational(input.substring(numStart).toDouble())
-          '/'-> Rational(num.toLong(),str.substring(a).toLong())
-          else->Rational(num.toLong())
-        }*if(isMinus) Rational.MINUS_ONE else Rational.ONE
-      }else if(func!=-1){
-        a+= validFunctions[func].length+1
-        val args= mutableListOf<String>()
-        var b=a
-        var depth=0
-        while(a<str.length){
-          when(str[a]){
-            '('->depth++
-            ')'->if(depth==0) break else depth--
-            ','->if(depth==0){
-              args+=str.substring(b,a)
-              b=a+1
+        when (str[a - 1]) {
+          '.' -> Rational(input.substring(numStart).toDouble())
+          '/' -> Rational(num.toLong(), str.substring(a).toLong())
+          else -> Rational(num.toLong())
+        } * if (isMinus) Rational.MINUS_ONE else Rational.ONE
+      } else if (func != -1) {
+        a += validFunctions[func].length + 1
+        val args = mutableListOf<String>()
+        var b = a
+        var depth = 0
+        while (a < str.length) {
+          when (str[a]) {
+            '(' -> depth++
+            ')' -> if (depth == 0) break else depth--
+            ',' -> if (depth == 0) {
+              args += str.substring(b, a)
+              b = a + 1
             }
           }
           a++
         }
-        args+=str.substring(b,str.length-1)
-        Func(validFunctions[func], args.map{Polynomial(it)})
-      }else{
+        args += str.substring(b, str.length - 1)
+        Func(validFunctions[func], args.map { Polynomial(it) })
+      } else {
         Letter(str[a])
       }
     }
   }
 
   override fun times(other: TermBase): TermBase {
-    return when(other){
-      is Polynomial,is Unary->other.times(this)
-      is ExpressionUnit->Unary(listOf(this,other))
-      else->throw Exception("")
+    return when (other) {
+      is Polynomial, is Unary -> other.times(this)
+      is ExpressionUnit -> Unary(listOf(this, other))
+      else -> throw Exception("")
     }
   }
 }
 
-data class Letter(val letter:Char):ExpressionUnit(){
-  override fun toPolynomial()= Polynomial(listOf(toUnary()))
+data class Letter(val letter: Char) : ExpressionUnit() {
+  override fun toPolynomial() = Polynomial(listOf(toUnary()))
 
-  override fun toUnary()=Unary(listOf(toLetter()))
+  override fun toUnary() = Unary(listOf(toLetter()))
 
-  fun toLetter()=Letter(letter)
+  fun toLetter() = Letter(letter)
 
-  override fun toString()=letter.toString()
+  override fun toString() = letter.toString()
 
-  override fun copy()=toLetter()
+  override fun copy() = toLetter()
 
-  override fun canBeUnary()=true
+  override fun canBeUnary() = true
 
-  override fun substitute(entries: Map<Letter, TermBase>)=entries[this]?:this
+  override fun substitute(entries: Map<Letter, TermBase>) = entries[this] ?: this
 
-  override fun approximation()=this
+  override fun approximation() = this
 }
 
-data class Func(val name:String,val args:List<TermBase>):ExpressionUnit(){
+data class Func(val name: String, val args: List<TermBase>) : ExpressionUnit() {
 
-  constructor(name: String, vararg args: TermBase):this(name,args.toList())
+  constructor(name: String, vararg args: TermBase) : this(name, args.toList())
 
-  override fun toPolynomial()= Polynomial(listOf(toUnary()))
+  override fun toPolynomial() = Polynomial(listOf(toUnary()))
 
-  override fun toUnary()=Unary(listOf(toFunc()))
+  override fun toUnary() = Unary(listOf(toFunc()))
 
-  fun toFunc()=Func(name,args.toList())
+  fun toFunc() = Func(name, args.toList())
 
-  override fun toString():String{
-    return if(specialFunctions.containsKey(name)&& specialFunctions[name]!!.toStringFn!=null){
+  override fun toString(): String {
+    return if (specialFunctions.containsKey(name) && specialFunctions[name]!!.toStringFn != null) {
       specialFunctions[name]!!.toStringFn!!.invoke(args)
-    }else "$name(${args.joinToString(",")})"
+    } else "$name(${args.joinToString(",")})"
   }
 
-  override fun copy()=toFunc()
+  override fun copy() = toFunc()
 
-  override fun canBeUnary()=true
+  override fun canBeUnary() = true
 
-  override fun substitute(entries: Map<Letter, TermBase>)=Func(name,args.map{it.substitute(entries)})
+  override fun substitute(entries: Map<Letter, TermBase>) = Func(name, args.map { it.substitute(entries) })
 
   override fun approximation(): TermBase {
-    return if(args.all { it.canBeUnary()&&it.toUnary().canBeRational() }){
-      specialFunctions[name]!!.approximation(args.map{it.toUnary().toRational().toDouble()})
-    }else this
+    return if (args.all { it.canBeUnary() && it.toUnary().canBeRational() }) {
+      specialFunctions[name]!!.approximation(args.map { it.toUnary().toRational().toDouble() })
+    } else this
   }
 }
 
-data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionUnit() {
+data class Rational(var numerator: Long, var denominator: Long = 1) : ExpressionUnit() {
 
   constructor(double: Double) : this(0) {
     //This is decimal length
     //in js , 3.0.toString()==3 but others are 3.0.toString()==3.0
     //so in js,if input is integer, length will be -1
     var length = double.toString().length - double.toInt().toString().length - 1
-    if(length==-1)length=1
+    if (length == -1) length = 1
     val d = 10.0.pow(length.toDouble()).toLong()
     numerator = (double * d).toLong()
     denominator = d
@@ -151,7 +151,7 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
     return Rational(numerator, denominator)
   }
 
-  override fun canBeUnary()=true
+  override fun canBeUnary() = true
 
   override fun toUnary(): Unary {
     return Unary(listOf(toRational()))
@@ -277,13 +277,13 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
   }
 
   fun pow(i: Int): Rational {
-    var j=i
+    var j = i
     var r = ONE
-    val t=if(j==0)return ONE
-    else if(j<0){
-      j=-j
+    val t = if (j == 0) return ONE
+    else if (j < 0) {
+      j = -j
       reciprocal()
-    }else this
+    } else this
     for (a in 0 until j) {
       r *= t
     }
@@ -296,14 +296,14 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
     return result
   }
 
-  override fun copy()=toRational()
+  override fun copy() = toRational()
 
-  override fun substitute(entries: Map<Letter, TermBase>)=this
+  override fun substitute(entries: Map<Letter, TermBase>) = this
 
-  override fun approximation()=this
+  override fun approximation() = this
 
-  fun factorization():Unary{
-    return Unary(divisors(numerator).map(::Rational),divisors(denominator).map(::Rational))
+  fun factorization(): Unary {
+    return Unary(divisors(numerator).map(::Rational), divisors(denominator).map(::Rational))
   }
 
   private fun divisors(long: Long): MutableList<Long> {
@@ -322,7 +322,7 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
       if (n % i == 0L) {
         result += i
         n /= i
-      }else i++
+      } else i++
     }
     return result
   }
