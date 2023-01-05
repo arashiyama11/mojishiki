@@ -301,4 +301,29 @@ data class Rational(var numerator: Long, var denominator: Long = 1) :ExpressionU
   override fun substitute(entries: Map<Letter, TermBase>)=this
 
   override fun approximation()=this
+
+  fun factorization():Unary{
+    return Unary(divisors(numerator).map(::Rational),divisors(denominator).map(::Rational))
+  }
+
+  private fun divisors(long: Long): MutableList<Long> {
+    var n = long
+    var i = 2L
+    val result = mutableListOf<Long>()
+    if (n < 0L) {
+      n *= -1L
+      result += -1L
+    }
+    while (true) {
+      if (i * i > n) {
+        result += n
+        break
+      }
+      if (n % i == 0L) {
+        result += i
+        n /= i
+      }else i++
+    }
+    return result
+  }
 }
