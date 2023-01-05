@@ -342,39 +342,47 @@ class Unary(unaryString: String) :TermBase() {
   }
 
   fun evaluate(): TermBase {
-    val u =
-      evalPs(termBases).let{if(it is Polynomial) it.arranged() else it}//.toPolynomial().evaluate()//.let { if (it is Polynomial) it.evaluate().factorization() else it.toUnary() }
-    val d =
-      evalPs(denoTermBases).let{if(it is Polynomial) it.arranged() else it}
-    return if(d.toString()=="1") u else Unary(u,d)
+    val uts = evalPs(termBases)
+    val dts = evalPs(denoTermBases)
 
-    /*.let { if (it is Polynomial) it.evaluate() else it }.toPolynomial().factorization()
-    if (u.isZero()) return Rational.ZERO
-    val us = (u.termBases + d.denoTermBases).toMutableList()
-    val ds = (d.termBases + u.denoTermBases).toMutableList()
+    if (dts.toString() == "1") return uts.let { if (it is Polynomial) it.arranged() else it }
+    if (dts.toString() == "-1") return uts.let { if (it is Polynomial) it.arranged() else it } * Rational.MINUS_ONE
+
+    val u = uts.let { t ->
+      when (t) {
+        is Polynomial -> t.factorization()
+        is Rational -> t.factorization()
+        else -> t.toUnary().let { if (it.canBeRational()) it.toRational().factorization() else it }
+      }
+    }
+
+    val d = dts.let { t ->
+      when (t) {
+        is Polynomial -> t.factorization()
+        is Rational -> t.factorization()
+        else -> t.toUnary().let { if (it.canBeRational()) it.toRational().factorization() else it }
+      }
+    }
+
+    val us = (u.termBases + d.denoTermBases).filter { it.toString() != "1" }.toMutableList()
+    val ds = (d.termBases + u.denoTermBases).filter { it.toString() != "1" }.toMutableList()
+
     var i = 0
-    while (i < us.size && i < ds.size) {
+    while (i < ds.size) {
       val j = us.indexOf(ds[i])
       if (j != -1) {
         ds.removeAt(i)
         us.removeAt(j)
-      }
-      i++
+      } else i++
     }
-    val us = (u.termBases + d.denoTermBases).toMutableList()
-    val ds = (d.termBases + u.denoTermBases).toMutableList()
-    if (us.size == 0) us += Rational.ONE
-    if (ds.size == 0) ds += Rational.ONE
+    if (ds.isEmpty()) ds += Rational.ONE
+    if (us.isEmpty()) us += Rational.ONE
 
-    val result = Unary(
-      listOf(us.reduce { acc, p ->acc*p
-      }),
-      listOf(ds.reduce { acc, p ->acc*p
-      })
-    )
-    return if (result.termBases.size == 1 && result.denoTermBases.size == 1 /*&& result.denoTermBases[0].isOne()*/) {
-      result.termBases[0]
-    } else result.toPolynomial()*/
+    return if (ds.all { it.toString() == "1" }) {
+      if (us.filter { it.toString() != "1" }.size == 1) {
+        us.filter { it.toString() != "1" }[0].let { if (it is Polynomial) it.arranged() else it }
+      } else us.reduce { acc, t -> acc * t }.toPolynomial().arranged()
+    } else Unary(us, ds)
   }
 
   override fun approximation()
