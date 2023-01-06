@@ -1,6 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "1.7.21"
-    id("convention.publication")
+  kotlin("multiplatform") version "1.8.0"
+  id("convention.publication")
 }
 
 
@@ -8,54 +8,53 @@ group = "io.github.arashiyama11"
 version = "1.0.2"
 
 repositories {
-    mavenCentral()
-    gradlePluginPortal()
+  mavenCentral()
+  gradlePluginPortal()
 }
 
 kotlin {
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "18"
-        }
-        withJava()
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
+  jvm {
+    compilations.all {
+      kotlinOptions.jvmTarget = "18"
     }
-    js(BOTH) {
-        browser {
-            commonWebpackConfig {
-                cssSupport.enabled = true
-            }
-        }
+    withJava()
+    testRuns["test"].executionTask.configure {
+      useJUnitPlatform()
     }
-    val hostOs = System.getProperty("os.name")
-    val isMingwX64 = hostOs.startsWith("Windows")
-    val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+  }
+  js(BOTH) {
+    browser {
+      commonWebpackConfig {
+      }
     }
+  }
+  val hostOs = System.getProperty("os.name")
+  val isMingwX64 = hostOs.startsWith("Windows")
+  val nativeTarget = when {
+    hostOs == "Mac OS X" -> macosX64("native")
+    hostOs == "Linux" -> linuxX64("native")
+    isMingwX64 -> mingwX64("native")
+    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+  }
 
-    
-    sourceSets {
-        val commonMain by getting {
-          dependencies {
-            implementation(kotlin("script-runtime"))
-          }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-        val jvmMain by getting
-        val jvmTest by getting
-        val jsMain by getting
-        val jsTest by getting
-        val nativeMain by getting
-        val nativeTest by getting
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation(kotlin("script-runtime"))
+      }
     }
+    val commonTest by getting {
+      dependencies {
+        implementation(kotlin("test"))
+      }
+    }
+    val jvmMain by getting
+    val jvmTest by getting
+    val jsMain by getting
+    val jsTest by getting
+    val nativeMain by getting
+    val nativeTest by getting
+  }
 }
 
