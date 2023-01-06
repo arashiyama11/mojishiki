@@ -3,21 +3,39 @@ package io.github.arashiyama11
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-class Polynomial(polynomialString: String) : TermBase() {
-  var unaries: List<Unary>
+class Polynomial(val unaries: List<Unary>) : TermBase() {
 
-  init {
-    unaries = parse(polynomialString)
-  }
+  constructor(polynomialString: String) : this(parse(polynomialString))
+
+  constructor(unary: Unary) : this(listOf(unary))
 
   companion object {
     val ZERO get() = Rational.ZERO.toPolynomial()
     val ONE get() = Rational.ONE.toPolynomial()
     val MINUS_ONE get() = Rational.MINUS_ONE.toPolynomial()
-  }
 
-  constructor(us: List<Unary>) : this("") {
-    unaries = us
+    private fun parse(input: String): List<Unary> {
+      var j = 0
+      var depth = 0
+      val unaryStrings = mutableListOf<String>()
+      for (i in input.indices) {
+        when (input[i]) {
+          '(' -> depth++
+          ')' -> depth--
+          '+' -> if (depth == 0) {
+            unaryStrings += input.substring(j, i).trim()
+            j = i + 1
+          }
+          '-' -> if (depth == 0 && i > 0 && input[i - 1] != '^') {
+            unaryStrings += input.substring(j, i).trim()
+            //-‚Ì‚Æ‚«‚Íæ“ª‚É-‚ğŠÜ‚Ü‚¹‚é‚Ì‚Å1‘«‚³‚È‚¢
+            j = i
+          }
+        }
+      }
+      unaryStrings += input.substring(j).trim()
+      return unaryStrings.map { Unary(it) }.filter { it.termBases.isNotEmpty() }
+    }
   }
 
   override fun toPolynomial(): Polynomial {
@@ -267,28 +285,6 @@ class Polynomial(polynomialString: String) : TermBase() {
       .joinToString("")
   }
 
-  private fun parse(input: String): List<Unary> {
-    var j = 0
-    var depth = 0
-    val unaryStrings = mutableListOf<String>()
-    for (i in input.indices) {
-      when (input[i]) {
-        '(' -> depth++
-        ')' -> depth--
-        '+' -> if (depth == 0) {
-          unaryStrings += input.substring(j, i).trim()
-          j = i + 1
-        }
-        '-' -> if (depth == 0 && i > 0 && input[i - 1] != '^') {
-          unaryStrings += input.substring(j, i).trim()
-          //-‚Ì‚Æ‚«‚Íæ“ª‚É-‚ğŠÜ‚Ü‚¹‚é‚Ì‚Å1‘«‚³‚È‚¢
-          j = i
-        }
-      }
-    }
-    unaryStrings += input.substring(j).trim()
-    return unaryStrings.map { Unary(it) }.filter { it.termBases.isNotEmpty() }
-  }
 
   fun arranged(letter: Char = 'x'): Polynomial {
     val res = mutableListOf<Unary>()
@@ -424,8 +420,8 @@ class Polynomial(polynomialString: String) : TermBase() {
         r = toPolynomial()
       } else {
         j = -i
-        r = Unary(listOf(Rational.ONE), listOf(toPolynomial())).toPolynomial()
-        t = Unary(listOf(Rational.ONE), listOf(toPolynomial())).toPolynomial()
+        r = reciprocal().toPolynomial()
+        t = r.toPolynomial()
       }
     }
     for (a in 1 until j) {
@@ -508,5 +504,5 @@ class Polynomial(polynomialString: String) : TermBase() {
 
   override fun copy() = toPolynomial()
 
-  fun reciprocal() = Unary(dp = toPolynomial())
+  fun reciprocal() = Unary(dt = toPolynomial())
 }

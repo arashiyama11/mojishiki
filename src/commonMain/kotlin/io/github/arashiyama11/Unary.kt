@@ -2,43 +2,33 @@ package io.github.arashiyama11
 
 import kotlin.math.absoluteValue
 
-class Unary(unaryString: String) : TermBase() {
-  var termBases: List<TermBase>
-  var denoTermBases: List<TermBase>
-
+class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = listOf(Rational.ONE)) : TermBase() {
   var rational = Rational.ONE
   var letters = mutableMapOf<Letter, Int>()
   var funcs = mutableMapOf<Func, Int>()
   var pols = mutableMapOf<Polynomial, Int>()
 
   init {
-    val (p, d) = parse(unaryString)
-    termBases = p
+    autoEvaluate()
+    classification()
+  }
+
+  constructor(unaryString: String) : this() {
+    val (t, d) = parse(unaryString)
+    termBases = t
     denoTermBases = d
     autoEvaluate()
     classification()
   }
 
-  constructor(p: TermBase = Rational.ONE, dp: TermBase = Rational.ONE) : this("") {
-    termBases = listOf(p)
-    denoTermBases = listOf(dp)
-    autoEvaluate()
-    classification()
-  }
-
-  constructor(ps: List<TermBase>, dps: List<TermBase>? = null) : this("") {
-    termBases = ps
-    denoTermBases = dps ?: listOf(Rational.ONE)
-    autoEvaluate()
-    classification()
-  }
+  constructor(t: TermBase = Rational.ONE, dt: TermBase = Rational.ONE) : this(listOf(t), listOf(dt))
 
   constructor(
     rat: Rational = Rational.ONE,
     lts: Map<Letter, Int>? = null,
     fns: Map<Func, Int>? = null,
     ps: Map<Polynomial, Int>? = null
-  ) : this("") {
+  ) : this() {
     val tb = mutableListOf<TermBase>(Rational(rat.numerator))
     val dtb = mutableListOf<TermBase>(Rational(rat.denominator))
 
@@ -510,7 +500,7 @@ class Unary(unaryString: String) : TermBase() {
         t = this
       } else {
         j = -i
-        r = Unary(denoTermBases, termBases)
+        r = reciprocal()
         t = r.toUnary()
       }
     }
@@ -522,15 +512,9 @@ class Unary(unaryString: String) : TermBase() {
 
   override fun canBeUnary() = true
 
-  override fun toUnary(): Unary {
-    return Unary(termBases.map {
-      it.copy()
-    }, denoTermBases.map { it.copy() })
-  }
+  override fun toUnary() = Unary(termBases.map { it.copy() }, denoTermBases.map { it.copy() })
 
-  override fun toPolynomial(): Polynomial {
-    return Polynomial(listOf(toUnary()))
-  }
+  override fun toPolynomial() = Polynomial(toUnary())
 
   fun isZero(): Boolean = termBases.any {
     when (it) {
@@ -550,7 +534,6 @@ class Unary(unaryString: String) : TermBase() {
     }
   }
 
-
   fun toRational(): Rational {
     if (!canBeRational()) throw ClassCastException("")
     return rational.toRational()
@@ -566,7 +549,6 @@ class Unary(unaryString: String) : TermBase() {
     }
     return false
   }
-
 
   override fun hashCode(): Int {
     var result = termBases.hashCode()
