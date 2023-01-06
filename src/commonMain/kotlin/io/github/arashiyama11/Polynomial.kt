@@ -94,58 +94,38 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     return gcd(b, a % b)
   }
 
-  //this=0‚Æ‚µ‚Ä‰ğ‚ğ‹‚ß‚é
-  //À””ÍˆÍ‚Ì‚İ
-  /*fun solve(letter: Char = 'x'): List<Polynomial>? {
-    val terms = evaluate().simplify().unaries.map { it.toTerm() }
-    val deg = terms.maxOf { Unary -> Unary.letters.maxOfOrNull { it.value } ?: 0 }
-    //~‚×‚«‚É‚µ‚Ä‹ó‚¢‚Ä‚¢‚éŸ”‚ğ0–„‚ß
-    val cor = List(deg + 1) { d ->
-      terms.find { it.letters[letter] == d || d == 0 && it.letters.isEmpty() || it.letters[letter] == null }
-        ?.div(Unary(Rational.ONE, mapOf(letter to d)))
-        ?: Unary.ZERO
-    }.reversed()
-    //®‚ÌŸ”
-    return when (deg) {
-      0 -> null // ‘S‚Ä‚Ì”
-      1 ->
-        //ax+b=0
-        //x=-b/a
-        listOf((cor[1] / cor[0] * Rational.MINUS_ONE).toPolynomial())
-      2 -> {
-        val pols = factorization().termBases
-        if (pols.size == 1) {
-          val a = cor[0]
-          val b = cor[1]
-          val c = cor[2]
-          val d =
-            Unary(
-              Rational.ONE,
-              null,
-              mapOf("sqrt" to FunctionValue(1, listOf((b * b).toPolynomial() + (a * c * -4.0).toPolynomial())))
-            ).toPolynomial()
+  fun solve(letter: Letter = Letter('x')): List<TermBase?> {
+    val fact = factorization()
+    val ltsRes = fact.termBases.filterIsInstance<Letter>().any { it == letter }
+    val polsRes = fact.termBases.filterIsInstance<Polynomial>().flatMap { pol ->
+      val deg = pol.unaries.maxOf { it.letters[letter] ?: 0 }
+
+      val ps = List(deg + 1) { d ->
+        val us = pol.unaries.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
+        if (us.isEmpty()) return@List ZERO
+        else us.map { Unary(it.rational, it.letters.filterKeys { k -> k != letter }, it.funcs, it.pols).toPolynomial() }
+          .reduce { acc, p -> acc + p }
+      }.reversed().toMutableList()
+
+      when (deg) {
+        0 -> listOf(null)
+        1 -> listOf(-Unary(ps[1], ps[0]))
+        2 -> {
+          val a = ps[0]
+          val b = ps[1]
+          val c = ps[2]
+          //sqrt(b^2-4ac)
+          val d = Func("sqrt", b * b + -(Rational(4) * a * c).toPolynomial()).toPolynomial()
           val da = a * 2.0
-          val mb = -b.toPolynomial()
-          listOf(
-            Unary(listOf(Polynomial(mb.unaries + d.unaries).evaluate()), listOf(da)).toPolynomial(),
-            Unary(listOf(Polynomial(mb.unaries + (-d).unaries).evaluate()), listOf(da)).toPolynomial()
-          )
-        } else {
-          pols.flatMap { it.toPolynomial().solve(letter) ?: emptyList() }
+          listOf(Unary(-b + d, da), Unary(-b + -d, da))
         }
-      }
-      else -> {
-        val facted = factorization()
-        if (facted.termBases.size == 1) {
-          null
-        } else {
-          facted.termBases.flatMap { it.toPolynomial().solve(letter) ?: emptyList() }
-        }
+        else -> listOf(null)
       }
     }
+    return if (ltsRes) listOf(Rational.ZERO) + polsRes else polsRes
   }
 
-
+  /*
   fun differential(letter: Char = 'x'): Polynomial {
     val terms = evaluate().unaries.map { it.toTerm() }
     return Polynomial(terms.map { Unary ->
