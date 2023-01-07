@@ -43,8 +43,8 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     }
 
     ps?.forEach { (p, i) ->
-      if (i > 0) for (j in 1 until i) tb += p.copy()
-      else if (i < 0) for (j in 1 until -i) dtb += p.copy()
+      if (i > 0) for (j in 0 until i) tb += p.copy()
+      else if (i < 0) for (j in 0 until -i) dtb += p.copy()
     }
 
     termBases = tb
