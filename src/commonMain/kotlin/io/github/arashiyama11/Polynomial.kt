@@ -115,9 +115,9 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
           val b = ps[1]
           val c = ps[2]
           //sqrt(b^2-4ac)
-          val d = Func("sqrt", b * b + -(Rational(4) * a * c).toPolynomial()).toPolynomial()
+          val d = Func("sqrt", b * b - (Rational(4) * a * c).toPolynomial()).toPolynomial()
           val da = a * 2.0
-          listOf(Unary(-b + d, da), Unary(-b + -d, da))
+          listOf(Unary(-b + d, da), Unary(-b - d, da))
         }
         else -> listOf(null)
       }
@@ -313,6 +313,10 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       .map { it.toUnary() } + (a[false] ?: emptyList()))*/
   }
 
+  operator fun plus(double: Double) = plus(Rational(double))
+
+  operator fun plus(int: Int) = plus(Rational(int.toLong()))
+
   operator fun plus(pol: Polynomial): Polynomial {
     val res = unaries.toMutableList()
     pol.unaries.forEach { unary ->
@@ -326,68 +330,57 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     return Polynomial(res)
   }
 
-  operator fun times(pol: Polynomial): Polynomial {
-    return Polynomial(unaries.flatMap { pol.unaries.map { u -> u * it } })
-  }
+  operator fun plus(termBase: TermBase) = plus(termBase.toPolynomial())
 
-  operator fun times(unary: Unary): Polynomial {
-    return Polynomial(unaries.map { it * unary })
-  }
+  operator fun minus(double: Double) = minus(Rational(double))
 
-  operator fun times(Double: Double): Polynomial {
-    return Polynomial(unaries.map { it * Double })
-  }
+  operator fun minus(int: Int) = minus(Rational(int.toLong()))
 
-  operator fun times(rational: Rational): Polynomial {
-    return Polynomial(unaries.map { it * rational })
-  }
+  operator fun minus(pol: Polynomial) = plus(-pol)
 
-  operator fun times(letter: Letter): Polynomial {
-    return Polynomial(unaries.map { it * letter })
-  }
+  operator fun minus(termBase: TermBase) = minus(termBase.toPolynomial())
 
-  operator fun times(func: Func): Polynomial {
-    return Polynomial(unaries.map { it * func })
-  }
+  operator fun times(double: Double) = times(Rational(double))
 
-  operator fun times(other: ExpressionUnit): Polynomial {
-    return Polynomial(unaries.map { it * other })
-  }
+  operator fun times(int: Int) = times(Rational(int.toLong()))
 
-  override fun times(other: TermBase): TermBase {
+  operator fun times(unary: Unary) = Polynomial(unaries.map { it * unary })
+
+  operator fun times(pol: Polynomial) = Polynomial(unaries.flatMap { pol.unaries.map { u -> u * it } })
+
+  override fun times(other: TermBase): Polynomial {
     return when (other) {
-      is ExpressionUnit -> times(other)
+      is ExpressionUnit -> times(other.toUnary())
       is Unary -> times(other)
       is Polynomial -> times(other)
       else -> throw Exception("")
     }
   }
 
-  operator fun div(Double: Double): Polynomial {
-    return times(1 / Double)
-  }
+  operator fun div(double: Double) = div(Rational(double))
 
-  operator fun div(rational: Rational): Polynomial {
-    return times(rational.reciprocal())
-  }
+  operator fun div(int: Int) = div(Rational(int.toLong()))
 
-  operator fun div(Unary: Unary): Polynomial {
-    return times(Unary.reciprocal())
-  }
+  operator fun div(rational: Rational) = times(rational.reciprocal())
 
-  //—]‚è‚ª0‚Ì‚Æ‚«‚¾‚¯•Ô‚·
+  operator fun div(unary: Unary) = times(unary.reciprocal())
+
   operator fun div(pol: Polynomial): Polynomial {
     val (res, t) = divSafe(pol)
-    return if (t.isZero()) res else Unary("(${toString()})/(${pol})").toPolynomial()
+    return if (t.isZero()) res else Unary(toPolynomial(), pol.toPolynomial()).toPolynomial()
   }
 
-  operator fun unaryPlus(): Polynomial {
-    return toPolynomial()
-  }
+  operator fun div(termBase: TermBase) =
+    when (termBase) {
+      is Polynomial -> div(termBase)
+      is Unary -> div(termBase)
+      is ExpressionUnit -> div(termBase.toUnary())
+      else -> throw Exception("")
+    }
 
-  operator fun unaryMinus(): Polynomial {
-    return toPolynomial() * Rational.MINUS_ONE
-  }
+  operator fun unaryPlus() = toPolynomial()
+
+  operator fun unaryMinus() = toPolynomial() * Rational.MINUS_ONE
 
   fun pow(i: Int): Polynomial {
     var j = i

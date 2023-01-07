@@ -420,60 +420,49 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     TODO()
   }
 
-  operator fun times(double: Double): Unary {
-    return times(Rational(double))
+  operator fun times(double: Double) = times(Rational(double))
+
+  operator fun times(int: Int) = times(Rational(int.toLong()))
+
+  operator fun times(rational: Rational) = Unary(
+    termBases + Rational(rational.numerator),
+    denoTermBases + Rational(rational.denominator)
+  )
+
+  operator fun times(unary: Unary) = Unary(termBases + unary.termBases, denoTermBases + unary.denoTermBases)
+
+  operator fun times(pol: Polynomial) = Unary(termBases + pol, denoTermBases)
+
+  operator fun times(exp: ExpressionUnit) = when (exp) {
+    is Rational -> times(exp)
+    else -> Unary(termBases + exp, denoTermBases)
   }
 
-  operator fun times(rational: Rational): Unary {
-    return Unary(
-      termBases + Rational(rational.numerator),
-      denoTermBases + Rational(rational.denominator)
-    )
+  override fun times(other: TermBase): TermBase = when (other) {
+    is ExpressionUnit -> times(other)
+    is Unary -> times(other)
+    is Polynomial -> times(other)
+    else -> throw Exception("")
   }
 
-  operator fun times(letter: Letter): Unary {
-    return Unary(termBases + letter, denoTermBases.toList())
-  }
+  operator fun div(double: Double) = div(Rational(double))
 
-  operator fun times(func: Func): Unary {
-    return Unary(termBases + func, denoTermBases.toList())
-  }
+  operator fun div(int: Int) = div(Rational(int.toLong()))
 
-  operator fun times(unary: Unary): Unary {
-    return Unary(termBases + unary.termBases, denoTermBases + unary.denoTermBases)
-  }
+  operator fun div(rational: Rational) =
+    Unary(termBases + Rational(rational.denominator), denoTermBases + Rational(rational.numerator))
 
-  operator fun times(pol: Polynomial): Unary {
-    return Unary(termBases + pol, denoTermBases)
-  }
+  operator fun div(unary: Unary) = Unary(termBases + unary.denoTermBases, denoTermBases + unary.termBases)
 
-  operator fun times(exp: ExpressionUnit): Unary {
-    return when (exp) {
-      is Rational -> times(exp)
-      is Letter -> times(exp)
-      is Func -> times(exp)
-    }
-  }
+  operator fun div(pol: Polynomial) = Unary(termBases, denoTermBases + pol)
 
-  override fun times(other: TermBase): TermBase {
-    return when (other) {
-      is ExpressionUnit -> times(other)
-      is Unary -> times(other)
-      is Polynomial -> times(other)
-      else -> throw Exception("")
-    }
-  }
+  operator fun div(exp: ExpressionUnit) = if (exp is Rational) div(exp) else Unary(termBases, denoTermBases + exp)
 
-  operator fun div(double: Double): Unary {
-    return Unary(termBases, denoTermBases + Rational(double))
-  }
-
-  operator fun div(unary: Unary): Unary {
-    return Unary(termBases, denoTermBases + unary.toPolynomial())
-  }
-
-  operator fun div(pol: Polynomial): Unary {
-    return Unary(termBases, denoTermBases + pol)
+  operator fun div(termBase: TermBase) = when (termBase) {
+    is Polynomial -> div(termBase)
+    is Unary -> div(termBase)
+    is ExpressionUnit -> div(termBase)
+    else -> throw Exception("")
   }
 
   operator fun plus(unary: Unary): Unary {
@@ -481,13 +470,9 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     return Unary(rational + unary.rational, letters, funcs, pols)
   }
 
-  operator fun unaryPlus(): Unary {
-    return toUnary()
-  }
+  operator fun unaryPlus() = toUnary()
 
-  operator fun unaryMinus(): Unary {
-    return times(Rational.MINUS_ONE)
-  }
+  operator fun unaryMinus() = times(Rational.MINUS_ONE)
 
   fun pow(i: Int): Unary {
     var r: Unary
