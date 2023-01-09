@@ -353,7 +353,7 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       is ExpressionUnit -> times(other.toUnary())
       is Unary -> times(other)
       is Polynomial -> times(other)
-      else -> throw Exception("")
+      else -> throw UnknownTermBaseInstanceException()
     }
   }
 
@@ -375,7 +375,7 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       is Polynomial -> div(termBase)
       is Unary -> div(termBase)
       is ExpressionUnit -> div(termBase.toUnary())
-      else -> throw Exception("")
+      else -> throw UnknownTermBaseInstanceException()
     }
 
   operator fun unaryPlus() = toPolynomial()

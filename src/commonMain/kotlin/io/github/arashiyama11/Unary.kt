@@ -442,7 +442,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     is ExpressionUnit -> times(other)
     is Unary -> times(other)
     is Polynomial -> times(other)
-    else -> throw Exception("")
+    else -> throw UnknownTermBaseInstanceException()
   }
 
   operator fun div(double: Double) = div(Rational(double))
@@ -462,7 +462,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     is Polynomial -> div(termBase)
     is Unary -> div(termBase)
     is ExpressionUnit -> div(termBase)
-    else -> throw Exception("")
+    else -> throw UnknownTermBaseInstanceException()
   }
 
   operator fun plus(unary: Unary): Unary {

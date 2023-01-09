@@ -6,3 +6,5 @@ $input
 ${" ".repeat(at)}^
   """
 )
+
+class UnknownTermBaseInstanceException : Exception()
