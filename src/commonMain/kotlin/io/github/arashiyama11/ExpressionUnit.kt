@@ -64,6 +64,15 @@ sealed class ExpressionUnit : TermBase() {
 }
 
 data class Letter(val letter: Char) : ExpressionUnit() {
+
+  init {
+    if (letter !in valid) throw InvalidLetterException(letter)
+  }
+
+  companion object {
+    const val valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  }
+
   override fun toPolynomial() = Polynomial(listOf(toUnary()))
 
   override fun toUnary() = Unary(listOf(toLetter()))
