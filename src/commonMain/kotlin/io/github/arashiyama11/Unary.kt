@@ -165,49 +165,19 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
   }
 
   private fun desuger(input: String): String {
-    var a = 0
-    var str = input.trim()
+    var str = input.replace(Regex("\\s"), "")
 
-    while (a < str.length) {
-      if (str[a].isDigit()) {
-        while (str[a].isDigit()) {
-          a++
-          if (a == str.length) break
-        }
-        if (a != str.length && str[a] !in ")/,*^") str = str.substring(0, a) + "*" + str.substring(a)
-      }
-
-      if (a + 1 < str.length && str[a].isLetter() && str[a + 1].isLetter()) {
-        val i = validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
-        if (i >= 0) {
-          a += validFunctions[i].length
-          while (str[a] != ')') {
-            a++
-          }
-        } else str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
-      }
-
-      if (a + 1 < str.length && str[a] == ')' && a != str.length - 1 && (str[a + 1].isLetterOrDigit() || str[a + 1] == '(')) {
-        str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
-      }
-
-      if (a + 1 < str.length && a > 0 && str[a] == '(' && !validFunctions.any { str.substring(0, a).endsWith(it) }) {
-        val char = str[a - 1]
-        if (char.isLetterOrDigit()) {
-          str = str.substring(0, a) + "*" + str.substring(a)
-        }
-      }
-
-      //ó›èÊÇÃèàóù
-      if (a + 1 < str.length && str[a] == '^') {
+    var b = 1
+    while (b + 1 < str.length) {
+      if (str[b] == '^') {
         var isBaseBrk = false
         var isFn = false
 
-        val base = when (str[a - 1]) {
+        val base = when (str[b - 1]) {
           ')' -> {
             isBaseBrk = true
             var depth = 0
-            val r = str.substring(0, a - 1).takeLastWhile {
+            val r = str.substring(0, b - 1).takeLastWhile {
               when (it) {
                 ')' -> {
                   depth++
@@ -220,7 +190,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
                 else -> true
               }
             }
-            val s = str.substring(0, a - r.length - 2)
+            val s = str.substring(0, b - r.length - 2)
             val f = validFunctions.find { s.endsWith(it) }
             if (f != null) {
               isFn = true
@@ -228,17 +198,17 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
             } else r
           }
           in "1234567890" -> {
-            str.substring(0, a).takeLastWhile { it.isDigit() }
+            str.substring(0, b).takeLastWhile { it.isDigit() }
           }
-          else -> str[a - 1].toString()
+          else -> str[b - 1].toString()
         }
 
         var isDBrk = false
-        val d = when (str[a + 1]) {
+        val d = when (str[b + 1]) {
           '(' -> {
             isDBrk = true
             var depth = 0
-            str.substring(a + 2).takeWhile {
+            str.substring(b + 2).takeWhile {
               when (it) {
                 '(' -> {
                   depth++
@@ -252,25 +222,102 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
               }
             }
           }
-          '-' -> "-" + str.substring(a + 2).takeWhile { it.isDigit() }
-          in "1234567890" -> str.substring(a + 1).takeWhile { it.isDigit() }
-          else -> str[a + 1].toString()
+          '-' -> "-" + str.substring(b + 2).takeWhile { it.isDigit() }
+          in "1234567890" -> str.substring(b + 1).takeWhile { it.isDigit() }
+          else -> str[b + 1].toString()
         }
 
         val p = "pow($base,$d)"
         str = str.substring(
           0,
-          a - base.length - if (isBaseBrk && !isFn) 2 else 0
-        ) + p + str.substring(a + d.length + if (isDBrk) 2 else 1)
+          b - base.length - if (isBaseBrk && !isFn) 2 else 0
+        ) + p + str.substring(b + d.length + if (isDBrk) 3 else 1)
       }
+      b++
+    }
 
+    var a = 0
+    if (str.length > 1 && str[0] == '-') {
+      if (str[1] in Letter.valid || str[1] == '(') {
+        str = "-1*" + str.substring(1)
+        a = 3
+      } else if (str[1].isDigit()) {
+        a++
+        while (a < str.length && str[a].isDigit()) a++
+        if (a < str.length && str[a] == '.') {
+          a++
+          if (a >= str.length || !str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
+          while (a < str.length && str[a].isDigit()) a++
+        }
+        if (a < str.length && str[a] != '*')
+          str = str.substring(0, a) + "*" + str.substring(a)
+        a++
+      }
+    }
+
+    while (a + 1 < str.length) {
+      when (str[a]) {
+        '/' -> {}
+        '(' -> {
+          if (a > 0 && (str[a - 1].isDigit() || str[a - 1] in Letter.valid)) {
+            str = str.substring(0, a) + "*" + str.substring(a)
+          }
+          var depth = 0
+          a++
+          while (true) {
+            if (str[a] == '(') depth++ else if (str[a] == ')') {
+              if (depth == 0) break else depth--
+            }
+            a++
+          }
+          if (a + 1 >= str.length) break
+          if (str[a + 1].isDigit() || str[a + 1] in Letter.valid || str[a + 1] == '(') {
+            str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
+            a++
+          } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
+        }
+        in "1234567890" -> {
+          if (str[a] == '-') {
+            a++
+            if (!str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
+          }
+          while (str[a].isDigit()) {
+            a++
+            if (a == str.length) break
+          }
+          if (a < str.length && str[a] == '.') {
+            a++
+            if (a >= str.length || !str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
+            while (a < str.length && str[a].isDigit()) a++
+          }
+          if (a != str.length && str[a] !in ")/,*^.") str = str.substring(0, a) + "*" + str.substring(a)
+        }
+        in Letter.valid ->
+          if (str[a + 1] in Letter.valid || str[a + 1] == '(') {
+            val i = validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
+            if (i >= 0) {
+              a += validFunctions[i].length + 1
+              var depth = 0
+              while (a < str.length) {
+                if (str[a] == '(') depth++ else if (str[a] == ')') {
+                  if (depth == 0) break else depth--
+                }
+                a++
+              }
+              if (a + 1 >= str.length) break
+              if (str[a + 1].isDigit() || str[a + 1] in Letter.valid || str[a + 1] == '(') {
+                str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
+                a++
+              } else if (str[a + 1] == '*') a++
+            } else {
+              if (str[a + 1] != '*') str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
+              a++
+            }
+          } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
+        else -> throw ParseException(str, a)
+      }
       a++
     }
-
-    if (str.length > 1 && str[0] == '-' && str[1].isLetter()) {
-      str = "-1*" + str.substring(1)
-    }
-
     return str
   }
 
