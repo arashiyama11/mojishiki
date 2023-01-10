@@ -382,6 +382,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
           }
           else -> ps += it
         }
+        is Polynomial -> ps += it.evaluate()
         else -> ps += it
       }
     }
