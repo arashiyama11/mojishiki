@@ -7,6 +7,7 @@ class PolynomialTest {
   @Test
   fun parseAndToStringTest() {
     assert(Polynomial("1 + 5 * 2 - 8 / 2"), "1+10-4")
+    assert(Polynomial("1.2+5.4-3.2/2"), "6/5+27/5-8/5")
     assert(Polynomial("2x^2-5x+ 3x -1"), "2x^2-5x+3x-1")
     assert(Polynomial("x^2+2x"), "x^2+2x")
     assert(Polynomial("sin(x)+cos(y)"), "sin(x)+cos(y)")
@@ -91,7 +92,7 @@ class PolynomialTest {
   fun solveTest() {
     assert(Polynomial("2x-4").solve(), "[2]")
     assert(Polynomial("2a-4").solve(Letter('a')), "[2]")
-    assert(Polynomial("a+2b").solve(Letter('b')), "[a/-2]")
+    assert(Polynomial("a+2b").solve(Letter('b')), "[-a/2]")
 
     assert(Polynomial("3x+5").solve(), "[-5/3]")
     assert(Polynomial("x^2+5x+4").solve(), "[-1, -4]")
