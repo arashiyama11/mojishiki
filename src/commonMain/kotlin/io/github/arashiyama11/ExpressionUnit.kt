@@ -58,7 +58,7 @@ sealed class ExpressionUnit : TermBase() {
     return when (other) {
       is Polynomial, is Unary -> other.times(this)
       is ExpressionUnit -> Unary(listOf(this, other))
-      else -> throw Exception("")
+      else -> throw UnknownTermBaseInstanceException()
     }
   }
 }
