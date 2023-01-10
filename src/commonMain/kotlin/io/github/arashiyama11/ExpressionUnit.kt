@@ -121,6 +121,13 @@ data class Func(val name: String, val args: List<TermBase>) : ExpressionUnit() {
 
 data class Rational(var numerator: Long, var denominator: Long = 1) : ExpressionUnit() {
 
+  init {
+    if (denominator < 0) {
+      numerator *= -1
+      denominator *= -1
+    }
+  }
+
   constructor(double: Double) : this(0) {
     //This is decimal length
     //in js , 3.0.toString()==3 but others are 3.0.toString()==3.0
@@ -130,6 +137,11 @@ data class Rational(var numerator: Long, var denominator: Long = 1) : Expression
     val d = 10.0.pow(length.toDouble()).toLong()
     numerator = (double * d).toLong()
     denominator = d
+
+    if (denominator < 0) {
+      numerator *= -1
+      denominator *= -1
+    }
   }
 
   companion object {
