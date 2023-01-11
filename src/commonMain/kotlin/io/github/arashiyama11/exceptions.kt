@@ -10,3 +10,5 @@ ${" ".repeat(at)}^
 class UnknownTermBaseInstanceException : Exception()
 
 class InvalidLetterException(char: Char) : Exception("$char is invalid as Letter.\nValid letters are '${Letter.valid}'")
+
+class InvalidFuncException(override val message: String?) : Exception()

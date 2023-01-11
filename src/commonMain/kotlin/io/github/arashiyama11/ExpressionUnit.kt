@@ -92,6 +92,14 @@ data class Letter(val letter: Char) : ExpressionUnit() {
 
 data class Func(val name: String, val args: List<TermBase>) : ExpressionUnit() {
 
+  init {
+    if (name !in validFunctions) throw InvalidFuncException("$name is invalid as Func's name.\nValid Funcs are $validFunctions")
+    val len = specialFunctions[name]!!.argLength
+    if (len != null && args.size != len) throw InvalidFuncException(
+      "Mismatched args length.\nExcepted is $len but it is ${args.size}"
+    )
+  }
+
   constructor(name: String, vararg args: TermBase) : this(name, args.toList())
 
   override fun toPolynomial() = Polynomial(listOf(toUnary()))
