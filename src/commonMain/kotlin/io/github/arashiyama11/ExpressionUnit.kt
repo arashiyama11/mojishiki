@@ -355,4 +355,8 @@ data class Rational(var numerator: Long, var denominator: Long = 1) : Expression
     }
     return result
   }
+
+  fun isZero() = numerator == 0L
+
+  fun isOne() = numerator == denominator
 }
