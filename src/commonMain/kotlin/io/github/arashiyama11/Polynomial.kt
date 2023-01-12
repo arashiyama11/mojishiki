@@ -48,7 +48,7 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
   fun evaluate(): Polynomial {
     if (unaries.isEmpty()) return Polynomial(listOf())
     val result = Polynomial(unaries.filter { !it.isZero() }.flatMap { it.evaluate().toPolynomial().unaries }).arranged()
-    return if (result.unaries.size == 1 && result.unaries[0].termBases.size == 1) {
+    return if (result.unaries.size == 1 && result.unaries[0].termBases.size == 1 && result.unaries[0].denoTermBases.toString() == "1") {
       result.unaries[0].termBases[0].toPolynomial()
     } else result
   }
