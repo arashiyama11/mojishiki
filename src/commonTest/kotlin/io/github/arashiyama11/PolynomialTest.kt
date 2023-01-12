@@ -124,14 +124,11 @@ class PolynomialTest {
     assert(Polynomial("sin(x)").integral(), "-cos(x)+C")
   }*/
 
-  /*@Test
-  fun functionTest(){
+  @Test
+  fun functionTest() {
+    assert(Polynomial("log(2)+log(5)").evaluate(), "log(10)")
     assert(Polynomial("3log(2)+log(5)-2log(3)").evaluate(), "log(40/9)")
-    assert(Polynomial("sqrt(2)*2sqrt(3)").evaluate(), "2sqrt(6)")
-    assert(Polynomial("sqrt(18/5)*sqrt(16/5)").evaluate(), "12sqrt(2)/5")
-    //assert(Polynomial("min(5,-3)").approximation(), "-3")
-    //assert(Polynomial("max(5,max(7,2))").approximation(), "7")
-  }*/
+  }
 
   private fun assert(a: Any?, b: Any?) = assertEquals(b.toString(), a.toString())
 }

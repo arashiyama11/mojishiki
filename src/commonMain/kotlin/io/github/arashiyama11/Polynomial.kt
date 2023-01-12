@@ -265,7 +265,6 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       .joinToString("")
   }
 
-
   fun arranged(letter: Char = 'x'): Polynomial {
     val res = mutableListOf<Unary>()
     unaries.forEach { unary ->
@@ -276,41 +275,18 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
         res[i] += unary
       }
     }
-    return Polynomial(res)
 
-    /*var us = mutableListOf<>()
-    val a = unaries.groupBy { it.canBeTerm() }
-    a[true]
-      ?.forEach { u ->
-        val e = u.toTerm()
-        val i = us.indexOfFirst {
-          it.letters == e.letters && it.functions == e.functions
-        }
-        if (i == -1) {
-          us += e
-        } else {
-          us[i] += e
-        }
-      }
+    val funcMap = res.groupBy { u ->
+      if (u.funcs.filterKeys { it.name == "log" }.let { it.size == 1 && it.toList()[0].second == 1 }) "log" else null
+    }
 
-    //ŠÖ”“¯Žm‚Ì‰‰ŽZ‚Ìˆ—
-    //log‚Ìˆ—
-    /*val logs = us.filter { it.functions.containsKey("log") }
-    if (logs.size > 1) {
-      val arg = logs.map {
-        it.functions["log"]!!.args[0].toPolynomial().pow(it.coefficient.toInt())
-      }.reduce { acc, pol -> acc * pol }.evaluate()
-      us = (us.filterNot { it.functions.containsKey("log") } + Unary(
-        Rational.ONE,
-        null,
-        mapOf("log" to FunctionValue(1, listOf(arg)))
-      )).toMutableList()
-    }*/
+    if (!funcMap.containsKey("log")) return Polynomial(res)
 
-    return Polynomial(us
-      .filter { it.coefficient.numerator != 0L }
-      .sortedBy { it.letters[letter]?.times(-1) }
-      .map { it.toUnary() } + (a[false] ?: emptyList()))*/
+    val log = Func("log", funcMap["log"]!!.map { u ->
+      u.funcs.filterKeys { it.name == "log" }.toList()[0].first.args[0].toPolynomial().pow(u.rational.toInt())
+    }.reduce { acc, p -> acc * p }).toUnary()
+
+    return Polynomial(funcMap[null]?.plus(log) ?: listOf(log))
   }
 
   operator fun plus(double: Double) = plus(Rational(double))
