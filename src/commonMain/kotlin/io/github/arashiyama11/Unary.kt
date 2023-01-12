@@ -136,8 +136,32 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     if (tb.isEmpty()) tb += Rational.ONE
     if (dtb.isEmpty()) dtb += Rational.ONE
 
-    termBases = tb
-    denoTermBases = dtb
+    val a = tb.groupBy { it is Letter && it.letter == 'i' }
+    var ac = Rational.ONE
+    var ai = a[true]?.size ?: 0
+    while (ai !in -1..1) {
+      if (ai < 0) ai += 2 else ai -= 2
+      ac = -ac
+    }
+
+    val b = dtb.groupBy { it is Letter && it.letter == 'i' }
+    var bc = Rational.ONE
+    var bi = b[true]?.size ?: 0
+    while (bi !in -1..1) {
+      if (bi < 0) bi += 2 else bi -= 2
+      bc = -bc
+    }
+
+    termBases =
+      (a[false] ?: emptyList()) + (if (!ac.isOne()) listOf(ac) else emptyList()) + if (ai > bi) List(ai - bi) {
+        Letter(
+          'i'
+        )
+      } else emptyList()
+    denoTermBases =
+      (b[false] ?: emptyList()) + (if (!bc.isOne()) listOf(bc) else emptyList()) + if (ai < bi) List(bi - ai) {
+        Letter('i')
+      } else emptyList()
   }
 
   private fun classification() {
@@ -366,32 +390,88 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
   override fun substitute(entries: Map<Letter, TermBase>) =
     Unary(termBases.map { it.substitute(entries) }, denoTermBases.map { it.substitute(entries) })
 
-  private fun evalPs(pols: List<TermBase>): TermBase {
+  private fun evalTs(pols: List<TermBase>): TermBase {
     if (pols.isEmpty()) return Rational.ZERO
     if (pols.any { it.toPolynomial().arranged().isZero() }) return Rational.ZERO
-    val ps = mutableListOf<TermBase>()
-    pols.forEach {
-      when (it) {
-        is Func -> when (it.name) {
-          "pow" -> {
-            val b = it.args[0]
-            val d = it.args[1]
-            if (d.canBeUnary() && d.toUnary().canBeRational()) {
-              for (i in 0 until d.toUnary().toRational().toInt()) ps += b
-            } else ps += it
-          }
-          else -> ps += it
+    return pols.fold(mutableListOf(), ::foldT).map(::evalT).reduce { acc, cur -> (acc * cur) }
+  }
+
+  private fun foldT(acc: MutableList<TermBase>, tb: TermBase): MutableList<TermBase> {
+    when (tb) {
+      is Func -> when (tb.name) {
+        "pow" -> {
+          val i = acc.indexOfFirst { it is Func && it.name == "pow" && it.args[0] == tb.args[0] }
+          if (i == -1) acc += tb else acc[i] =
+            Func("pow", tb.args[0], (acc[i] as Func).args[1].toPolynomial() + tb.args[1])
         }
-        is Polynomial -> ps += it.evaluate()
-        else -> ps += it
+        "sqrt" -> {
+          val i = acc.indexOfFirst { it is Func && it.name == "sqrt" }
+          if (i == -1) acc += tb else acc[i] = Func("sqrt", (acc[i] as Func).args[0] * tb.args[0])
+        }
+        else -> acc += tb
       }
+      else -> acc += tb
     }
-    return ps.reduce { acc, cur -> (acc * cur) }
+    return acc
+  }
+
+  private fun evalT(termBase: TermBase): TermBase {
+    return when (termBase) {
+      is Func -> when (termBase.name) {
+        "pow" -> {
+          val b = termBase.args[0]
+          val d = termBase.args[1]
+          if (d.canBeUnary() && d.toUnary().canBeRational()) {
+            b.toPolynomial().pow(d.toUnary().toRational().toInt())
+          } else termBase
+        }
+        "sqrt" -> {
+          val arg = termBase.args[0]
+          if (arg is Unary || arg.canBeUnary()) {
+            val unary = arg.toUnary()
+            val isImaginary = unary.rational.toDouble() < 0
+            val fact = if (isImaginary) (-unary.rational).factorization() else unary.rational.factorization()
+            val rs = fact.termBases.map { it as Rational }
+            val drs = fact.denoTermBases.map { it as Rational }
+            val list = mutableListOf<Rational>()
+            val dlist = mutableListOf<Rational>()
+            var coefRes = Rational.ONE
+            rs.forEach {
+              if (list.contains(it)) {
+                coefRes *= it
+                list.remove(it)
+              } else list.add(it)
+            }
+
+            drs.forEach {
+              if (dlist.contains(it)) {
+                coefRes /= it
+                dlist.remove(it)
+              } else dlist.add(it)
+            }
+
+            val n = list.reduceOrNull { acc, r -> acc * r } ?: Rational.ONE
+            val d = dlist.reduceOrNull { acc, r -> acc * r } ?: Rational.ONE
+
+            (if (n.isOne() && d.isOne()) coefRes else
+              Unary(
+                listOf(
+                  coefRes,
+                  Func("sqrt", n / d)
+                )
+              )) * if (isImaginary) Letter('i') else ONE
+          } else arg
+        }
+        else -> termBase
+      }
+      is Polynomial -> termBase.evaluate()
+      else -> termBase
+    }
   }
 
   fun evaluate(): TermBase {
-    val uts = evalPs(termBases)
-    val dts = evalPs(denoTermBases)
+    val uts = evalTs(termBases)
+    val dts = evalTs(denoTermBases)
 
     if (dts.toString() == "1") return uts.let { if (it is Polynomial) it.arranged() else it }
     if (dts.toString() == "-1") return uts.let { if (it is Polynomial) it.arranged() else it } * Rational.MINUS_ONE
