@@ -2,24 +2,26 @@ package io.github.arashiyama11
 
 import kotlin.math.absoluteValue
 
-class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = listOf(Rational.ONE)) : TermBase() {
+class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase>>) : TermBase() {
+  var termBases = termBasePair.first
+  var denoTermBases: List<TermBase> = termBasePair.second
+
   var rational = Rational.ONE
   var letters = mutableMapOf<Letter, Int>()
   var funcs = mutableMapOf<Func, Int>()
-  var pols = mutableMapOf<Polynomial, Int>()
+  var polynomials = mutableMapOf<Polynomial, Int>()
 
   init {
     autoEvaluate()
     classification()
   }
 
-  constructor(unaryString: String) : this() {
-    val (t, d) = parse(unaryString)
-    termBases = t
-    denoTermBases = d
-    autoEvaluate()
-    classification()
-  }
+  constructor(
+    termBase: List<TermBase>,
+    denoTermBases: List<TermBase> = listOf(Rational.ONE)
+  ) : this(termBase to denoTermBases)
+
+  constructor(unaryString: String) : this(parse(unaryString))
 
   constructor(t: TermBase = Rational.ONE, dt: TermBase = Rational.ONE) : this(listOf(t), listOf(dt))
 
@@ -58,6 +60,205 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     val ZERO get() = Rational.ZERO.toUnary()
     val ONE get() = Rational.ONE.toUnary()
     val MINUS_ONE get() = Rational.MINUS_ONE.toUnary()
+
+    private fun desuger(input: String): String {
+      var str = input.replace(Regex("\\s"), "")
+
+      var b = 1
+      while (b + 1 < str.length) {
+        if (str[b] == '^') {
+          var isBaseBrk = false
+          var isFn = false
+
+          val base = when (str[b - 1]) {
+            ')' -> {
+              isBaseBrk = true
+              var depth = 0
+              val r = str.substring(0, b - 1).takeLastWhile {
+                when (it) {
+                  ')' -> {
+                    depth++
+                    true
+                  }
+                  '(' -> if (depth == 0) false else {
+                    depth--
+                    true
+                  }
+                  else -> true
+                }
+              }
+              val s = str.substring(0, b - r.length - 2)
+              val f = validFunctions.find { s.endsWith(it) }
+              if (f != null) {
+                isFn = true
+                "$f($r)"
+              } else r
+            }
+            in "1234567890" -> {
+              str.substring(0, b).takeLastWhile { it.isDigit() }
+            }
+            else -> str[b - 1].toString()
+          }
+
+          var isDBrk = false
+          val d = when (str[b + 1]) {
+            '(' -> {
+              isDBrk = true
+              var depth = 0
+              str.substring(b + 2).takeWhile {
+                when (it) {
+                  '(' -> {
+                    depth++
+                    true
+                  }
+                  ')' -> if (depth == 0) false else {
+                    depth--
+                    true
+                  }
+                  else -> true
+                }
+              }
+            }
+            '-' -> "-" + str.substring(b + 2).takeWhile { it.isDigit() }
+            in "1234567890" -> str.substring(b + 1).takeWhile { it.isDigit() }
+            else -> str[b + 1].toString()
+          }
+
+          val p = "pow($base,$d)"
+          str = str.substring(
+            0,
+            b - base.length - if (isBaseBrk && !isFn) 2 else 0
+          ) + p + str.substring(b + d.length + if (isDBrk) 3 else 1)
+        }
+        b++
+      }
+
+      var a = 0
+      if (str.length > 1 && str[0] == '-') {
+        if (str[1] in Letter.valid || str[1] == '(') {
+          str = "-1*" + str.substring(1)
+          a = 3
+        } else if (str[1].isDigit()) {
+          a++
+          while (a < str.length && str[a].isDigit()) a++
+          if (a < str.length && str[a] == '.') {
+            a++
+            if (a >= str.length || !str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
+            while (a < str.length && str[a].isDigit()) a++
+          }
+          if (a < str.length && str[a] != '*')
+            str = str.substring(0, a) + "*" + str.substring(a)
+          a++
+        }
+      }
+
+      while (a + 1 < str.length) {
+        when (str[a]) {
+          '/' -> {}
+          '(' -> {
+            if (a > 0 && (str[a - 1].isDigit() || str[a - 1] in Letter.valid)) {
+              str = str.substring(0, a) + "*" + str.substring(a)
+            }
+            var depth = 0
+            a++
+            while (true) {
+              if (str[a] == '(') depth++ else if (str[a] == ')') {
+                if (depth == 0) break else depth--
+              }
+              a++
+            }
+            if (a + 1 >= str.length) break
+            if (str[a + 1].isDigit() || str[a + 1] in Letter.valid || str[a + 1] == '(') {
+              str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
+              a++
+            } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
+          }
+          in "1234567890" -> {
+            if (str[a] == '-') {
+              a++
+              if (!str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
+            }
+            while (str[a].isDigit()) {
+              a++
+              if (a == str.length) break
+            }
+            if (a < str.length && str[a] == '.') {
+              a++
+              if (a >= str.length || !str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
+              while (a < str.length && str[a].isDigit()) a++
+            }
+            if (a != str.length && str[a] !in ")/,*^.") str = str.substring(0, a) + "*" + str.substring(a)
+          }
+          in Letter.valid ->
+            if (str[a + 1] in Letter.valid || str[a + 1] == '(') {
+              val i = validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
+              if (i >= 0) {
+                a += validFunctions[i].length + 1
+                var depth = 0
+                while (a < str.length) {
+                  if (str[a] == '(') depth++ else if (str[a] == ')') {
+                    if (depth == 0) break else depth--
+                  }
+                  a++
+                }
+                if (a + 1 >= str.length) break
+                if (str[a + 1].isDigit() || str[a + 1] in Letter.valid || str[a + 1] == '(') {
+                  str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
+                  a++
+                } else if (str[a + 1] == '*') a++
+              } else {
+                if (str[a + 1] != '*') str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
+                a++
+              }
+            } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
+          else -> throw ParseException(str, a)
+        }
+        a++
+      }
+      return str
+    }
+
+    private fun parse(input: String): Pair<List<TermBase>, List<TermBase>> {
+      if (input.isEmpty()) return emptyList<TermBase>() to emptyList()
+      val str = desuger(input)
+      val strUnarys = mutableListOf<String>()
+      var j = 0
+      var depth = 0
+      for (i in str.indices) {
+        when (str[i]) {
+          '(' -> depth++
+          ')' -> depth--
+          '*' -> if (depth == 0) {
+            strUnarys += str.substring(j, i).trim()
+            j = i + 1
+          }
+          '/' -> if (depth == 0) {
+            strUnarys += str.substring(j, i).trim()
+            j = i
+          }
+        }
+      }
+      strUnarys += str.substring(j).trim()
+      val nums = mutableListOf<TermBase>()
+      val denos = mutableListOf<TermBase>()
+      strUnarys.filter { it.isNotEmpty() }.forEach {
+        if (it[0] == '/') {
+          denos += if (it.length > 1 && it[1] == '(' && it.last() == ')') {
+            Polynomial(it.substring(2, it.length - 1).trim())
+          } else {
+            ExpressionUnit.parse(it.substring(1).trim())
+          }
+        } else {
+          nums += if (it[0] == '(' && it.last() == ')') {
+            Polynomial(it.substring(1, it.length - 1))
+          } else {
+            ExpressionUnit.parse(it)
+          }
+        }
+      }
+      if (denos.isEmpty()) denos += Rational.ONE
+      return nums to denos
+    }
   }
 
   private fun autoEvaluate() {
@@ -75,7 +276,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
           "pow" -> if (t.args[0].canBeUnary() && t.args[1].canBeUnary()) {
             val b = t.args[0].toUnary()
             val d = t.args[1].toUnary()
-            if (d.canBeRational() && b.pols.isEmpty()) {
+            if (d.canBeRational() && b.polynomials.isEmpty()) {
               val a = d.toRational().toInt()
               if (a > 0) {
                 for (i in 1..a) {
@@ -110,7 +311,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
           "pow" -> if (t.args[0] is Unary && t.args[1] is Unary) {
             val b = t.args[0] as Unary
             val d = t.args[1] as Unary
-            if (d.canBeRational() && b.pols.isEmpty()) {
+            if (d.canBeRational() && b.polynomials.isEmpty()) {
               val a = d.toRational().toInt()
               if (a > 0) {
                 for (i in 1..a) {
@@ -172,7 +373,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
         is Func -> if (funcs.containsKey(it)) funcs[it] = funcs[it]!! + 1 else funcs += it to 1
       } else {
         val p = it as Polynomial
-        if (pols.containsKey(p)) pols[p] = pols[p]!! + 1 else pols += p to 1
+        if (polynomials.containsKey(p)) polynomials[p] = polynomials[p]!! + 1 else polynomials += p to 1
       }
     }
 
@@ -183,208 +384,9 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
         is Func -> if (funcs.containsKey(it)) funcs[it] = funcs[it]!! - 1 else funcs += it to -1
       } else {
         val p = it as Polynomial
-        if (pols.containsKey(p)) pols[p] = pols[p]!! - 1 else pols += p to -1
+        if (polynomials.containsKey(p)) polynomials[p] = polynomials[p]!! - 1 else polynomials += p to -1
       }
     }
-  }
-
-  private fun desuger(input: String): String {
-    var str = input.replace(Regex("\\s"), "")
-
-    var b = 1
-    while (b + 1 < str.length) {
-      if (str[b] == '^') {
-        var isBaseBrk = false
-        var isFn = false
-
-        val base = when (str[b - 1]) {
-          ')' -> {
-            isBaseBrk = true
-            var depth = 0
-            val r = str.substring(0, b - 1).takeLastWhile {
-              when (it) {
-                ')' -> {
-                  depth++
-                  true
-                }
-                '(' -> if (depth == 0) false else {
-                  depth--
-                  true
-                }
-                else -> true
-              }
-            }
-            val s = str.substring(0, b - r.length - 2)
-            val f = validFunctions.find { s.endsWith(it) }
-            if (f != null) {
-              isFn = true
-              "$f($r)"
-            } else r
-          }
-          in "1234567890" -> {
-            str.substring(0, b).takeLastWhile { it.isDigit() }
-          }
-          else -> str[b - 1].toString()
-        }
-
-        var isDBrk = false
-        val d = when (str[b + 1]) {
-          '(' -> {
-            isDBrk = true
-            var depth = 0
-            str.substring(b + 2).takeWhile {
-              when (it) {
-                '(' -> {
-                  depth++
-                  true
-                }
-                ')' -> if (depth == 0) false else {
-                  depth--
-                  true
-                }
-                else -> true
-              }
-            }
-          }
-          '-' -> "-" + str.substring(b + 2).takeWhile { it.isDigit() }
-          in "1234567890" -> str.substring(b + 1).takeWhile { it.isDigit() }
-          else -> str[b + 1].toString()
-        }
-
-        val p = "pow($base,$d)"
-        str = str.substring(
-          0,
-          b - base.length - if (isBaseBrk && !isFn) 2 else 0
-        ) + p + str.substring(b + d.length + if (isDBrk) 3 else 1)
-      }
-      b++
-    }
-
-    var a = 0
-    if (str.length > 1 && str[0] == '-') {
-      if (str[1] in Letter.valid || str[1] == '(') {
-        str = "-1*" + str.substring(1)
-        a = 3
-      } else if (str[1].isDigit()) {
-        a++
-        while (a < str.length && str[a].isDigit()) a++
-        if (a < str.length && str[a] == '.') {
-          a++
-          if (a >= str.length || !str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
-          while (a < str.length && str[a].isDigit()) a++
-        }
-        if (a < str.length && str[a] != '*')
-          str = str.substring(0, a) + "*" + str.substring(a)
-        a++
-      }
-    }
-
-    while (a + 1 < str.length) {
-      when (str[a]) {
-        '/' -> {}
-        '(' -> {
-          if (a > 0 && (str[a - 1].isDigit() || str[a - 1] in Letter.valid)) {
-            str = str.substring(0, a) + "*" + str.substring(a)
-          }
-          var depth = 0
-          a++
-          while (true) {
-            if (str[a] == '(') depth++ else if (str[a] == ')') {
-              if (depth == 0) break else depth--
-            }
-            a++
-          }
-          if (a + 1 >= str.length) break
-          if (str[a + 1].isDigit() || str[a + 1] in Letter.valid || str[a + 1] == '(') {
-            str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
-            a++
-          } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
-        }
-        in "1234567890" -> {
-          if (str[a] == '-') {
-            a++
-            if (!str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
-          }
-          while (str[a].isDigit()) {
-            a++
-            if (a == str.length) break
-          }
-          if (a < str.length && str[a] == '.') {
-            a++
-            if (a >= str.length || !str[a].isDigit()) throw ParseException(str, a, "Excepting digit")
-            while (a < str.length && str[a].isDigit()) a++
-          }
-          if (a != str.length && str[a] !in ")/,*^.") str = str.substring(0, a) + "*" + str.substring(a)
-        }
-        in Letter.valid ->
-          if (str[a + 1] in Letter.valid || str[a + 1] == '(') {
-            val i = validFunctions.indexOfFirst { str.substring(a).startsWith(it) }
-            if (i >= 0) {
-              a += validFunctions[i].length + 1
-              var depth = 0
-              while (a < str.length) {
-                if (str[a] == '(') depth++ else if (str[a] == ')') {
-                  if (depth == 0) break else depth--
-                }
-                a++
-              }
-              if (a + 1 >= str.length) break
-              if (str[a + 1].isDigit() || str[a + 1] in Letter.valid || str[a + 1] == '(') {
-                str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
-                a++
-              } else if (str[a + 1] == '*') a++
-            } else {
-              if (str[a + 1] != '*') str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
-              a++
-            }
-          } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
-        else -> throw ParseException(str, a)
-      }
-      a++
-    }
-    return str
-  }
-
-  private fun parse(input: String): Pair<List<TermBase>, List<TermBase>> {
-    if (input.isEmpty()) return emptyList<TermBase>() to emptyList()
-    val str = desuger(input)
-    val strUnarys = mutableListOf<String>()
-    var j = 0
-    var depth = 0
-    for (i in str.indices) {
-      when (str[i]) {
-        '(' -> depth++
-        ')' -> depth--
-        '*' -> if (depth == 0) {
-          strUnarys += str.substring(j, i).trim()
-          j = i + 1
-        }
-        '/' -> if (depth == 0) {
-          strUnarys += str.substring(j, i).trim()
-          j = i
-        }
-      }
-    }
-    strUnarys += str.substring(j).trim()
-    val nums = mutableListOf<TermBase>()
-    val denos = mutableListOf<TermBase>()
-    strUnarys.filter { it.isNotEmpty() }.forEach {
-      if (it[0] == '/') {
-        denos += if (it.length > 1 && it[1] == '(' && it.last() == ')') {
-          Polynomial(it.substring(2, it.length - 1).trim())
-        } else {
-          ExpressionUnit.parse(it.substring(1).trim())
-        }
-      } else {
-        nums += if (it[0] == '(' && it.last() == ')') {
-          Polynomial(it.substring(1, it.length - 1))
-        } else {
-          ExpressionUnit.parse(it)
-        }
-      }
-    }
-    if (denos.isEmpty()) denos += Rational.ONE
-    return nums to denos
   }
 
   override fun substitute(entries: Map<Letter, TermBase>) =
@@ -530,7 +532,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
   override fun toString(): String {
     val lts = letters.entries.groupBy { it.value > 0 }
     val fns = funcs.entries.groupBy { it.value > 0 }
-    val ps = pols.entries.groupBy { it.value > 0 }
+    val ps = polynomials.entries.groupBy { it.value > 0 }
 
     var n = "${rational.numerator}${exprToString(lts[true])}${exprToString(fns[true])}${exprToString(ps[true])}"
     var d = "${rational.denominator}${exprToString(lts[false])}${exprToString(fns[false])}${exprToString(ps[false])}"
@@ -595,7 +597,7 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
 
   operator fun plus(unary: Unary): Unary {
     if (!hasSameFuncAndLetter(unary)) throw Exception("Cannot plus")
-    return Unary(rational + unary.rational, letters, funcs, pols)
+    return Unary(rational + unary.rational, letters, funcs, polynomials)
   }
 
   operator fun unaryPlus() = toUnary()
@@ -652,9 +654,10 @@ class Unary(var termBases: List<TermBase>, var denoTermBases: List<TermBase> = l
     return rational.toRational()
   }
 
-  fun canBeRational() = letters.isEmpty() && funcs.isEmpty() && pols.isEmpty()
+  fun canBeRational() = letters.isEmpty() && funcs.isEmpty() && polynomials.isEmpty()
 
-  fun hasSameFuncAndLetter(other: Unary) = letters == other.letters && funcs == other.funcs && pols == other.pols
+  fun hasSameFuncAndLetter(other: Unary) =
+    letters == other.letters && funcs == other.funcs && polynomials == other.polynomials
 
   override fun equals(other: Any?): Boolean {
     if (other is Unary) {

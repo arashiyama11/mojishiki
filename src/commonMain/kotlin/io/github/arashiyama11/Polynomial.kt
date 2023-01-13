@@ -103,7 +103,14 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       val ps = List(deg + 1) { d ->
         val us = pol.unaries.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
         if (us.isEmpty()) return@List ZERO
-        else us.map { Unary(it.rational, it.letters.filterKeys { k -> k != letter }, it.funcs, it.pols).toPolynomial() }
+        else us.map {
+          Unary(
+            it.rational,
+            it.letters.filterKeys { k -> k != letter },
+            it.funcs,
+            it.polynomials
+          ).toPolynomial()
+        }
           .reduce { acc, p -> acc + p }
       }.reversed().toMutableList()
 
@@ -389,14 +396,28 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     val a = List(unaries.maxOf { it.letters[letter] ?: 0 } + 1) { d ->
       val us = unaries.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
       if (us.isEmpty()) return@List ZERO
-      else us.map { Unary(it.rational, it.letters.filterKeys { k -> k != letter }, it.funcs, it.pols).toPolynomial() }
+      else us.map {
+        Unary(
+          it.rational,
+          it.letters.filterKeys { k -> k != letter },
+          it.funcs,
+          it.polynomials
+        ).toPolynomial()
+      }
         .reduce { acc, p -> acc + p }
     }.reversed().toMutableList()
 
     val b = List(dUnaries.maxOf { it.letters[letter] ?: 0 } + 1) { d ->
       val us = dUnaries.filter { it.letters[letter] == d || d == 0 && it.letters[letter] == null }
       if (us.isEmpty()) return@List ZERO
-      else us.map { Unary(it.rational, it.letters.filterKeys { k -> k != letter }, it.funcs, it.pols).toPolynomial() }
+      else us.map {
+        Unary(
+          it.rational,
+          it.letters.filterKeys { k -> k != letter },
+          it.funcs,
+          it.polynomials
+        ).toPolynomial()
+      }
         .reduce { acc, p -> acc + p }
     }.reversed().toMutableList()
 
