@@ -326,8 +326,8 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
                   tb += copy.denoTermBases
                 }
               }
-            }
-          }
+            } else dtb += t
+          } else dtb += t
           else -> dtb += t
         }
         is Rational -> dtb += t.reduction()
