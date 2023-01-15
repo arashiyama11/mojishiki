@@ -349,8 +349,12 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
   operator fun div(unary: Unary) = times(unary.reciprocal())
 
   operator fun div(pol: Polynomial): Polynomial {
-    val (res, t) = divSafe(pol)
-    return if (t.isZero()) res else Unary(toPolynomial(), pol.toPolynomial()).toPolynomial()
+    return try {
+      val (res, t) = divSafe(pol)
+      if (t.isZero()) res else Unary(toPolynomial(), pol.toPolynomial()).toPolynomial()
+    } catch (e: Throwable) {
+      Unary(toPolynomial(), pol.toPolynomial()).toPolynomial()
+    }
   }
 
   operator fun div(termBase: TermBase) =
