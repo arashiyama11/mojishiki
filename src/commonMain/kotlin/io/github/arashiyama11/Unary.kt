@@ -494,25 +494,35 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
       }
     }
 
-    val us = (u.termBases + d.denoTermBases).filter { it.toString() != "1" }.toMutableList()
-    val ds = (d.termBases + u.denoTermBases).filter { it.toString() != "1" }.toMutableList()
+    val us = (u.termBases + d.denoTermBases).filter { it.toString() != "1" }
+    val ds = (d.termBases + u.denoTermBases).filter { it.toString() != "1" }
+
+    val ur = us.filterIsInstance<Rational>().reduceOrNull { acc, t -> acc * t } ?: Rational.ONE
+    val dr = ds.filterIsInstance<Rational>().reduceOrNull { acc, t -> acc * t } ?: Rational.ONE
+
+    val r = (ur / dr).reduction()
+
+    val ups = us.filter { it !is Rational && it.toString() != "1" }.toMutableList()
+    val uds = ds.filter { it !is Rational && it.toString() != "1" }.toMutableList()
 
     var i = 0
-    while (i < ds.size) {
-      val j = us.indexOf(ds[i])
+    while (i < uds.size) {
+      val j = ups.indexOf(ds[i])
       if (j != -1) {
-        ds.removeAt(i)
-        us.removeAt(j)
+        uds.removeAt(i)
+        ups.removeAt(j)
       } else i++
     }
-    if (ds.isEmpty()) ds += Rational.ONE
-    if (us.isEmpty()) us += Rational.ONE
 
-    return if (ds.all { it.toString() == "1" }) {
-      if (us.filter { it.toString() != "1" }.size == 1) {
-        us.filter { it.toString() != "1" }[0].let { if (it is Polynomial) it.arranged() else it }
-      } else us.reduce { acc, t -> acc * t }.toPolynomial().arranged()
-    } else Unary(us, ds)
+    uds += Rational(r.denominator)
+    ups += Rational(r.numerator)
+
+    val res = if (uds.all { it.toString() == "1" }) {
+      if (ups.filter { it.toString() != "1" }.size == 1) {
+        ups.filter { it.toString() != "1" }[0].let { if (it is Polynomial) it.arranged() else it }
+      } else ups.reduce { acc, t -> acc * t }.toPolynomial().arranged()
+    } else Unary(ups, uds)
+    return res
   }
 
   override fun approximation() = Unary(termBases.map { it.approximation() }, denoTermBases.map { it.approximation() })
