@@ -37,13 +37,6 @@ class PolynomialTest {
     assert(Polynomial("x+1").pow(3), "x^3+3x^2+3x+1")
   }
 
-  //@Test
-  /*fun simplifyTest(){
-    assert(Polynomial("x^2/2+x").simplify(), "x^2+2x")
-    assert(Polynomial("6x^2+12x+4").simplify(), "3x^2+6x+2")
-    assert(Polynomial("x^3+12x^2/5+24x/5+12/5").simplify().evaluate(), "5x^3+12x^2+24x+12")
-  }*/
-
   @Test
   fun substituteTest() {
     assert(Polynomial("x^2+x+3").substitute(mapOf(Letter('x') to Rational(1))).evaluate(), "5")
@@ -111,18 +104,23 @@ class PolynomialTest {
     assert(Polynomial("x^3-6x^2+11x-30").solve(), "[5, (1+sqrt(-23))/2, (1-sqrt(-23))/2]")
   }
 
-  /*@Test
-  fun calculusTest(){
+  @Test
+  fun calculusTest() {
     assert(Polynomial("x^2").differential(), "2x")
     assert(Polynomial("3x^2+5x+1").differential(), "6x+5")
-    assert(Polynomial("-a^3-2a+10").differential('a'), "-3a^2-2")
+    assert(Polynomial("(x+1)(x-2)+3").differential(), "2x-1")
+    assert(Polynomial("-a^3-2a+10").differential(Letter('a')), "-3a^2-2")
     assert(Polynomial("2sin(2x+1)").differential(), "4cos(2x+1)")
-    assert(Polynomial("tan(x)").differential(), "cos(x)^-2")
+    assert(Polynomial("tan(2x)").differential(), "2/cos(2x)^2")
+    assert(Polynomial("log(x)").differential().evaluate(), "1/x")
+    assert(Polynomial("3sin(3cos(4x))sin(zcos(o)(a-b))").differential(), "-36sin(4x)cos(3cos(4x))sin(zcos(o)(a-b))")
+    assert(Polynomial("sin(x)cos(2x)").differential(), "cos(x)cos(2x)-2sin(x)sin(2x)")
+    assert(Polynomial("3sin(a)/(2a)").differential(Letter('a')), "(6acos(a)-6sin(a))/4a^2")
 
-    assert(Polynomial("2x^2+4x-1").integral(), "2x^3/3+2x^2-x+C")
-    assert(Polynomial("v+at").integral('t'), "tv+at^2/2+C")
-    assert(Polynomial("sin(x)").integral(), "-cos(x)+C")
-  }*/
+    //assert(Polynomial("2x^2+4x-1").integral(), "2x^3/3+2x^2-x+C")
+    //assert(Polynomial("v+at").integral('t'), "tv+at^2/2+C")
+    //assert(Polynomial("sin(x)").integral(), "-cos(x)+C")
+  }
 
   @Test
   fun functionTest() {

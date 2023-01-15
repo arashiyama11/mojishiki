@@ -132,6 +132,61 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     return if (ltsRes) listOf(Rational.ZERO) + polsRes else polsRes
   }
 
+  private fun isConst(termBase: TermBase, letter: Letter): Boolean {
+    return when (termBase) {
+      is Letter -> termBase != letter
+      is Rational -> true
+      is Func -> termBase.args.all { isConst(it, letter) }
+      is Polynomial -> termBase.unaries.all { isConst(it, letter) }
+      is Unary -> (termBase.termBases + termBase.denoTermBases).all { isConst(it, letter) }
+      else -> throw UnknownTermBaseInstanceException()
+    }
+  }
+
+  fun differential(letter: Letter = Letter('x')): Polynomial {
+    return evaluate().unaries.map { unary ->
+      val constList = mutableListOf<TermBase>()
+      val diffList = mutableListOf<TermBase>()
+
+      val dConstList = mutableListOf<TermBase>()
+      val dDiffList = mutableListOf<TermBase>()
+
+      unary.termBases.forEach { if (isConst(it, letter)) constList += it else diffList += it }
+      unary.denoTermBases.forEach { if (isConst(it, letter)) dConstList += it else dDiffList += it }
+
+      val const = Unary(constList)
+      val dConst = Unary(dConstList)
+
+      if (diffList.isEmpty() && dDiffList.isEmpty()) return@map ZERO
+      return@map if (dDiffList.isEmpty()) {
+        val degree = diffList.filterIsInstance<Letter>().size
+        val diffed =
+          listOf(Unary(Rational(degree.toLong()), mapOf(letter to degree - 1))) + diffList.filterIsInstance<Func>()
+            .map {
+              (specialFunctions[it.name]!!.differential ?: throw Exception())(
+                it.args,
+                letter
+              )
+            }
+        val f = listOf(Unary(lts = mapOf(letter to degree))) + diffList.filterIsInstance<Func>()
+
+        when (diffed.size) {
+          0 -> ZERO
+          1 -> diffed[0].toPolynomial()
+          2 -> f[0].toPolynomial() * diffed[1] + diffed[0] * f[1]
+          3 -> diffed[0].toPolynomial() * f[1] * f[2] + f[0] * diffed[1] * f[2] + f[0] * f[1] * diffed[2]
+          else -> TODO()
+        } * const / dConst
+      } else {
+        val f = Unary(unary.termBases).toPolynomial().evaluate()
+        val df = f.differential(letter).evaluate()
+        val g = Unary(unary.denoTermBases).toPolynomial().evaluate()
+        val dg = g.differential(letter).evaluate()
+        ((df * g - f * dg).evaluate() / (g * g).evaluate()).evaluate()
+      }
+    }.reduce { acc, p -> acc + p }
+  }
+
   /*
   fun differential(letter: Char = 'x'): Polynomial {
     val terms = evaluate().unaries.map { it.toTerm() }
