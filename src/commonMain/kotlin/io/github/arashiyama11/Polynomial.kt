@@ -55,17 +55,6 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
 
   override fun approximation() = Polynomial(unaries.map { it.approximation() })
 
-
-  //Ž®‚ÌŒW”‚ðŠÈ’P‚É‚·‚é
-  /*fun simplify(): Polynomial {
-    val terms = arranged().unaries.map { it.toTerm() }
-    val mt = Rational(
-      terms.map { abs(it.coefficient.denominator) }.reduce { acc, Unary -> acc * Unary / gcd(acc, Unary) },
-      terms.map { abs(it.coefficient.numerator) }.reduce { acc, l -> gcd(acc, l) }
-    )
-    return Polynomial(terms.map { (it * mt).toUnary() })
-  }*/
-
   private fun divisors(long: Long): MutableList<Long> {
     var n = long
     var i = 2L
