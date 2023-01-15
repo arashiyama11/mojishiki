@@ -470,7 +470,7 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     return unaries[0]
   }
 
-  override fun hashCode() = unaries.hashCode()
+  override fun hashCode() = unaries.map { it.hashCode() }.reduceOrNull { acc, i -> acc + i } ?: 0
 
   override fun copy() = toPolynomial()
 

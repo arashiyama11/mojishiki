@@ -667,8 +667,8 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
   }
 
   override fun hashCode(): Int {
-    var result = termBases.hashCode()
-    result = 31 * result + denoTermBases.hashCode()
+    var result = termBases.map { it.hashCode() }.reduce { acc, i -> acc + i }
+    result = 31 * result + denoTermBases.map { it.hashCode() }.reduce { acc, i -> acc + i }
     return result
   }
 
