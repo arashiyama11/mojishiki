@@ -534,6 +534,7 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
         if (d == 0) return@mapIndexed ""
         (if (tb is Polynomial) "($tb)" else "$tb") + when (d) {
           1 -> ""
+          -1 -> ""
           else -> "^${d.absoluteValue}"
         }
       }.joinToString("")
