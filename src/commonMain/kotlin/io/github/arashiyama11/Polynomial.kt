@@ -207,6 +207,11 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     }.reduce { acc, pol -> acc + pol } + Letter('C')
   }
 
+  fun integral(letter: Letter = Letter('x'), from: TermBase, to: TermBase): Polynomial {
+    val f = integral(letter)
+    return (f.substitute(mapOf(letter to to)) - f.substitute(mapOf(letter to from))).evaluate()
+  }
+
   fun factorization(): Unary {
     if (canBeUnary()) return toUnary()
     val us = evaluate().unaries.map { it.copy() }

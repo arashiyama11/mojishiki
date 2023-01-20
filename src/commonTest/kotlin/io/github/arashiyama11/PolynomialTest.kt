@@ -123,6 +123,10 @@ class PolynomialTest {
     assert(Polynomial("2cos(x)y").integral(), "2ysin(x)+C")
     assert(Polynomial("2/x^3").integral(), "C-1/x^2")
     assert(Polynomial("2/x").integral(), "2log(x)+C")
+
+    assert(Polynomial("6x^2+4x+1").integral(from = Rational(0), to = Rational(2)), "26")
+    assert(Polynomial("12y^3+4y+5/y^2").integral(Letter('y'), Rational(-3), Rational(-1)), "-758/3")
+    assert(Polynomial("sin(x)+cos(x)").integral(from = Rational(0), to = Rational(1)), "-cos(1)+sin(1)+cos(0)-sin(0)")
   }
 
   @Test
