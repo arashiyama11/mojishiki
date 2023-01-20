@@ -117,9 +117,12 @@ class PolynomialTest {
     assert(Polynomial("sin(x)cos(2x)").differential(), "cos(x)cos(2x)-2sin(x)sin(2x)")
     assert(Polynomial("3sin(a)/(2a)").differential(Letter('a')), "(6acos(a)-6sin(a))/4a^2")
 
-    //assert(Polynomial("2x^2+4x-1").integral(), "2x^3/3+2x^2-x+C")
-    //assert(Polynomial("v+at").integral('t'), "tv+at^2/2+C")
-    //assert(Polynomial("sin(x)").integral(), "-cos(x)+C")
+    assert(Polynomial("2x^2+4x-1").integral(), "2x^3/3+2x^2-x+C")
+    assert(Polynomial("v+at").integral(Letter('t')), "tv+at^2/2+C")
+    assert(Polynomial("sin(x)").integral(), "-cos(x)+C")
+    assert(Polynomial("2cos(x)y").integral(), "2ysin(x)+C")
+    assert(Polynomial("2/x^3").integral(), "C-1/x^2")
+    assert(Polynomial("2/x").integral(), "2log(x)+C")
   }
 
   @Test

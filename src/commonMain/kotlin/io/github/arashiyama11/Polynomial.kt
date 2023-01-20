@@ -176,58 +176,36 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
     }.reduce { acc, p -> acc + p }
   }
 
-  /*
-  fun differential(letter: Char = 'x'): Polynomial {
-    val terms = evaluate().unaries.map { it.toTerm() }
-    return Polynomial(terms.map { Unary ->
-      if (Unary.functions.size == 1)
-        Unary.functions.forEach { (t, u) ->
-          return@map Unary(
-            listOf(
-              u.args[0].toPolynomial().differential(), specialFunctions[t]!!.differential!!.invoke(u.args)
-                .toPolynomial().evaluate(), Unary(Unary.coefficient)
-            )
-          ).evaluate().toUnary()
-        }
+  fun integral(letter: Letter = Letter('x')): Polynomial {
+    return evaluate().unaries.map { unary ->
+      val constList = mutableListOf<TermBase>()
+      val diffList = mutableListOf<TermBase>()
 
-      val d = Unary.letters[letter] ?: return@map Unary.ZERO
-      Unary(Unary.coefficient * d, Unary.letters.mapValues { (k, v) ->
-        if (k == letter) {
-          v - 1
-        } else {
-          v
-        }
-      }).toUnary()
-    }.toList())
+      val dConstList = mutableListOf<TermBase>()
+      val dDiffList = mutableListOf<TermBase>()
+
+      unary.termBases.forEach { if (isConst(it, letter)) constList += it else diffList += it }
+      unary.denoTermBases.forEach { if (isConst(it, letter)) dConstList += it else dDiffList += it }
+
+
+      val diffFuncs = diffList.filterIsInstance<Func>()
+      val degree = diffList.filterIsInstance<Letter>().size
+
+      val dDiffFuncs = dDiffList.filterIsInstance<Func>()
+      val dDegree = dDiffList.filterIsInstance<Letter>().size
+
+      if (dDiffFuncs.isNotEmpty()) TODO()
+
+      val d = degree - dDegree
+      val const = Unary(constList, dConstList).toPolynomial()
+
+      if (diffFuncs.isEmpty()) {
+        if (d == -1) const * Func("log", letter) else
+          const * Unary(Rational(1, d.toLong() + 1), mapOf(letter to d + 1))
+      } else if (diffFuncs.size != 1) TODO()
+      else const * specialFunctions[diffFuncs[0].name]!!.integral!!(diffFuncs[0].args)
+    }.reduce { acc, pol -> acc + pol } + Letter('C')
   }
-
-  fun integral(letter: Char = 'x'): Polynomial {
-    val terms = evaluate().unaries.map { it.toTerm() }
-    return Polynomial(terms.map {
-      if (it.functions.size == 1) {
-        it.functions.forEach { (t, u) ->
-          return@map specialFunctions[t]!!.integral!!.invoke(u.args).toPolynomial().toUnary()
-        }
-      }
-      val d = it.letters[letter] ?: 0
-      Unary(
-        it.coefficient / (d + 1),
-        if (it.letters.containsKey(letter)) {
-          it.letters.mapValues { (k, v) ->
-            if (k == letter) {
-              v + 1
-            } else {
-              v
-            }
-          }
-        } else {
-          mapOf(
-            letter to 1
-          ) + it.letters
-        }
-      ).toUnary()
-    }.toList()) + Unary(Rational.ONE, mapOf('C' to 1)).toPolynomial()
-  }*/
 
   fun factorization(): Unary {
     if (canBeUnary()) return toUnary()
