@@ -146,8 +146,8 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       val const = Unary(constList)
       val dConst = Unary(dConstList)
 
-      if (diffList.isEmpty() && dDiffList.isEmpty()) return@map ZERO
-      return@map if (dDiffList.isEmpty()) {
+      if (diffList.isEmpty() && dDiffList.isEmpty()) ZERO
+      else if (dDiffList.isEmpty()) {
         val degree = diffList.filterIsInstance<Letter>().size
         val diffed =
           listOf(Unary(Rational(degree.toLong()), mapOf(letter to degree - 1))) + diffList.filterIsInstance<Func>()
