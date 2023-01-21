@@ -210,7 +210,7 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
                 if (str[a + 1] != '*') str = str.substring(0, a + 1) + "*" + str.substring(a + 1)
                 a++
               }
-            } else if (str[a + 1] == '*') a++ else throw ParseException(str, a + 1)
+            } else if (str[a + 1] == '*' || str[a + 1] == '/') a++ else throw ParseException(str, a + 1)
           else -> throw ParseException(str, a)
         }
         a++
