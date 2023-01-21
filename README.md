@@ -5,12 +5,17 @@
 This is a Kotlin code that allows you to calculate literal-expression.
 
 Mojishiki means literal-expression in Japanese
+
 ## Features
+
+- 100% rational calculation
 - Pure Kotlin
 - Multiplatform
 
 # Installation
+
 ## Grade
+
 ```
 //gradle kotlin DSL
 implementation("io.github.arashiyama11:mojishiki:1.0.2")
@@ -20,14 +25,15 @@ implementation 'io.github.arashiyama11:mojishiki:1.0.2'
 ```
 
 ## Maven
+
 ```xml
+
 <dependency>
-  <groupId>io.github.arashiyama11</groupId>
-  <artifactId>mojishiki</artifactId>
-  <version>1.0.2</version>
+    <groupId>io.github.arashiyama11</groupId>
+    <artifactId>mojishiki</artifactId>
+    <version>1.0.2</version>
 </dependency>
 ```
-
 
 # Example usage
 
@@ -36,7 +42,7 @@ implementation 'io.github.arashiyama11:mojishiki:1.0.2'
 ```kotlin
 Polynomial("1+5*2-8/2").evaluate() //7
 Polynomial("2x-y+3x+y").evaluate() //5x
-Polynomial("2x+y+1") + Polynomial("2y-3").evaluate() //2x+3y-2
+(Polynomial("2x+y+1") + Polynomial("2y-3")).evaluate() //2x+3y-2
 ```
 
 2. Expansion and factorization
@@ -51,7 +57,7 @@ Polynomial("6x^2+7x+2").factorization() //(2x+1)(3x+2)
 ```kotlin
 Polynomial("sin(1)")
   .approximation()
-  .toStringWith(setOf("double")) //0.8414709851576089
+  .toStringWith(decimal = true) //0.8414709851576089
 Polynomial("sqrt(-25)").approximation()  //5i
 Polynomial("3i*2i").evaluate() //-6.0
 Polynomial("sqrt(-2)sqrt(-2)").evaluate() //-2.0
@@ -86,9 +92,9 @@ Polynomial("x^2+5x+4").solve() //[-1, -4]
 ```kotlin
 Polynomial("3x^2+5x+1").differential() //6x+5
 Polynomial("3sin(3cos(4x))").differential() //-36cos(3cos(4x))sin(4x)
-Polynomial("8x^3+4x").integral() //2x^4+2x^2+C
+Polynomial("sin(x)+cos(y)").integral(Letter('y')) //ysin(x)+sin(y)+C
+Polynomial("8x^3+4x").integral(from = Rational(0), to = Rational(3)) //180
 ```
-
 
 # Licence
 
