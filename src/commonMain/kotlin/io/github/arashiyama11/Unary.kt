@@ -293,6 +293,15 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
               }
             } else tb += t
           } else tb += t
+          "sqrt" -> {
+            if (t.args[0].canBeUnary()) {
+              val u = t.args[0].toUnary()
+              if (u.rational.toDouble() < 0) {
+                tb += Func("sqrt", -u)
+                tb += Letter('i')
+              } else tb += t
+            } else tb += t
+          }
           else -> tb += t
         }
         is Rational -> tb += t.reduction()
@@ -328,6 +337,15 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
               }
             } else dtb += t
           } else dtb += t
+          "sqrt" -> {
+            if (t.args[0].canBeUnary()) {
+              val u = t.args[0].toUnary()
+              if (u.rational.toDouble() < 0) {
+                dtb += Func("sqrt", -u)
+                dtb += Letter('i')
+              } else dtb += t
+            } else dtb += t
+          }
           else -> dtb += t
         }
         is Rational -> dtb += t.reduction()

@@ -65,7 +65,7 @@ class UnaryTest {
     assert(Unary("sqrt(36)").evaluate(), "6")
     assert(Unary("sqrt(-12)").evaluate(), "2isqrt(3)")
     assert(Unary("sqrt(2)*2sqrt(3)").evaluate(), "2sqrt(6)")
-    assert(Unary("sqrt(-2)*2sqrt(-3)").evaluate(), "2sqrt(6)")
+    assert(Unary("sqrt(-2)*2sqrt(-3)").evaluate(), "-2sqrt(6)")
     assert(Unary("sqrt(18/5)sqrt(16/5)").evaluate(), "12sqrt(2)/5")
     assert(Unary("sqrt(18/5)sqrt(-16)").evaluate(), "12isqrt(2/5)")
     assert(Unary("pow(x,2x)pow(x,3y)").evaluate(), "x^(2x+3y)")

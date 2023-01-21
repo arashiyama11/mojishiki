@@ -92,16 +92,13 @@ class PolynomialTest {
     assert(Polynomial("k^2+5k+4").solve(Letter('k')), "[-1, -4]")
     assert(Polynomial("x^2+4xy+4y^2").solve(Letter('x')), "[-2y, -2y]")
 
-    //assert(Polynomial("x^2+x+5").solve(), "[(-1+isqrt(19))/2, (-1-isqrt(19))/2]")
-    assert(Polynomial("x^2+x+5").solve(), "[(-1+sqrt(-19))/2, (-1-sqrt(-19))/2]")
+    assert(Polynomial("x^2+x+5").solve(), "[(-1+isqrt(19))/2, (-1-isqrt(19))/2]")
     assert(Polynomial("x^2-4").solve(), "[-2, 2]")
     assert(Polynomial("x^2+3x").solve(), "[0, -3]")
     assert(Polynomial("(x+1)(x-2)(x+3)").evaluate().solve(), "[-1, 2, -3]")
     assert(Polynomial("9x(x-a)(x-b)(x-c)").solve(), "[0, a, b, c]")
-    //assert(Polynomial("x^3-1").solve(), "[1, (-1+isqrt(3))/2, (-1-isqrt(3))/2]")
-    assert(Polynomial("x^3-1").solve(), "[1, (-1+sqrt(-3))/2, (-1-sqrt(-3))/2]")
-    //assert(Polynomial("x^3-6x^2+11x-30").solve(), "[5, (1+isqrt(23))/2, (1-isqrt(23))/2]")
-    assert(Polynomial("x^3-6x^2+11x-30").solve(), "[5, (1+sqrt(-23))/2, (1-sqrt(-23))/2]")
+    assert(Polynomial("x^3-1").solve(), "[1, (-1+isqrt(3))/2, (-1-isqrt(3))/2]")
+    assert(Polynomial("x^3-6x^2+11x-30").solve(), "[5, (1+isqrt(23))/2, (1-isqrt(23))/2]")
   }
 
   @Test
