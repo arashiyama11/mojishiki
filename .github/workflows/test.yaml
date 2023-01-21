@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
@@ -16,9 +16,8 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v3.9.0
         with:
-          java-version: 15
+          java-version: 18
           distribution: 'adopt'
-          cache: 'gradle'
 
       - name: test
         run: ./gradlew check
