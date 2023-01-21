@@ -413,7 +413,7 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
   private fun evalTs(pols: List<TermBase>): TermBase {
     if (pols.isEmpty()) return Rational.ZERO
     if (pols.any { it.toPolynomial().arranged().isZero() }) return Rational.ZERO
-    return pols.fold(mutableListOf(), ::foldT).map(::evalT).reduce { acc, cur -> (acc * cur) }
+    return pols.fold(mutableListOf(), ::foldT).map(::evalT).reduce { acc, cur -> acc * cur }
   }
 
   private fun foldT(acc: MutableList<TermBase>, tb: TermBase): MutableList<TermBase> {

@@ -300,7 +300,7 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       .joinToString("")
   }
 
-  fun arranged(letter: Char = 'x'): Polynomial {
+  fun arranged(): Polynomial {
     val res = mutableListOf<Unary>()
     unaries.forEach { unary ->
       val i = res.indexOfFirst { unary.hasSameFuncAndLetter(it) }
