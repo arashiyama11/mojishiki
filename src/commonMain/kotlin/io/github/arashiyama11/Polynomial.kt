@@ -285,15 +285,16 @@ class Polynomial(val unaries: List<Unary>) : TermBase() {
       .joinToString("")
   }
 
-  fun toStringWith(options: Set<String>): String {
+  override fun toStringWith(decimal: Boolean, lang: Language?): String {
+    if (!decimal && lang == null) return toString()
     val us = unaries.filter { !it.isZero() }
     if (us.isEmpty()) return "0"
     return us
-      /*.sortedBy {
-        if (it.canBeTerm()) it.toTerm().letters['x']?.times(-1) ?: 0 else 0
-      }*/
+      .sortedBy {
+        if (it.canBeUnary()) it.toUnary().letters[Letter('x')]?.times(-1) ?: 0 else 0
+      }
       .mapIndexed { index, it ->
-        val s = it.toStringWith(options)
+        val s = it.toStringWith(decimal, lang)
         if (index == 0 || s.isEmpty() || s[0] == '-') s else "+$s"
       }
       .joinToString("")

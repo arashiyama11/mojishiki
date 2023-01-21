@@ -81,6 +81,8 @@ data class Letter(val letter: Char) : ExpressionUnit() {
 
   override fun toString() = letter.toString()
 
+  override fun toStringWith(decimal: Boolean, lang: Language?): String = toString()
+
   override fun copy() = toLetter()
 
   override fun canBeUnary() = true
@@ -110,8 +112,15 @@ data class Func(val name: String, val args: List<TermBase>) : ExpressionUnit() {
 
   override fun toString(): String {
     return if (specialFunctions.containsKey(name) && specialFunctions[name]!!.toStringFn != null) {
-      specialFunctions[name]!!.toStringFn!!.invoke(args)
+      specialFunctions[name]!!.toStringFn!!.invoke(args, false, null)
     } else "$name(${args.joinToString(",")})"
+  }
+
+  override fun toStringWith(decimal: Boolean, lang: Language?): String {
+    if (!decimal && lang == null) return toString()
+    return if (specialFunctions.containsKey(name) && specialFunctions[name]!!.toStringFn != null) {
+      specialFunctions[name]!!.toStringFn!!.invoke(args, decimal, lang)
+    } else "$name(${args.joinToString(",") { it.toStringWith(decimal, lang) }})"
   }
 
   override fun copy() = toFunc()
@@ -166,6 +175,10 @@ data class Rational(var numerator: Long, var denominator: Long = 1) : Expression
     }
     if (denominator == 1L) return "$numerator"
     return "$numerator/$denominator"
+  }
+
+  override fun toStringWith(decimal: Boolean, lang: Language?): String {
+    return if (decimal) toDouble().toString() else toString()
   }
 
   fun toDouble(): Double {

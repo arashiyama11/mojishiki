@@ -527,17 +527,42 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
 
   override fun approximation() = Unary(termBases.map { it.approximation() }, denoTermBases.map { it.approximation() })
 
-  private fun exprToString(exp: List<MutableMap.MutableEntry<out TermBase, Int>>?): String {
+  private fun exprToString(
+    exp: List<MutableMap.MutableEntry<out TermBase, Int>>?, decimal: Boolean = false, lang: Language? = null
+  ): String {
     if (exp == null) return ""
-    return exp.let { if (it.isNotEmpty() && it[0].key is Letter) it.sortedBy { (it.key as Letter).letter } else it }
-      .mapIndexed { i, (tb, d) ->
-        if (d == 0) return@mapIndexed ""
-        (if (tb is Polynomial) "($tb)" else "$tb") + when (d) {
-          1 -> ""
-          -1 -> ""
-          else -> "^${d.absoluteValue}"
+    if (lang == Language.Kotlin) {
+      return exp.joinToString("*") {
+        when (it.value) {
+          0 -> ""
+          1, -1 -> if (it.key is Polynomial) "(${it.key.toStringWith(decimal, lang)})" else it.key.toStringWith(
+            decimal,
+            lang
+          )
+          else -> (if (it.key is Polynomial) "(${
+            it.key.toStringWith(
+              decimal,
+              lang
+            )
+          })" else it.key.toStringWith(
+            decimal,
+            lang
+          )) + ".pow(${it.value})"
         }
-      }.joinToString("")
+
+      }
+    }
+    return exp.let { if (it.isNotEmpty() && it[0].key is Letter) it.sortedBy { (it.key as Letter).letter } else it }
+      .joinToString(if (lang == null) "" else "*") { (tb, d) ->
+        if (d == 0) return@joinToString ""
+        (if (tb is Polynomial) "(${tb.toStringWith(decimal, lang)})" else tb.toStringWith(
+          decimal,
+          lang
+        )) + when (d) {
+          1, -1 -> ""
+          else -> (if (lang == Language.JavaScript || lang == Language.Python) "**" else "^") + "${d.absoluteValue}"
+        }
+      }
   }
 
   override fun toString(): String {
@@ -557,8 +582,35 @@ class Unary private constructor(termBasePair: Pair<List<TermBase>, List<TermBase
     else "$n/$d"
   }
 
-  fun toStringWith(options: Set<String>): String {
-    TODO()
+  override fun toStringWith(decimal: Boolean, lang: Language?): String {
+    val lts = letters.entries.groupBy { it.value > 0 }
+    val fns = funcs.entries.groupBy { it.value > 0 }
+    val ps = polynomials.entries.groupBy { it.value > 0 }
+
+    val n = listOf(
+      "${if (decimal) rational.toDouble() else rational.numerator}",
+      exprToString(
+        lts[true], decimal,
+        lang
+      ),
+      exprToString(
+        fns[true], decimal, lang
+      ),
+      exprToString(ps[true], decimal, lang),
+    ).filter { it.isNotEmpty() }.joinToString(if (lang == null) "" else "*")
+    val d = listOf(
+      "${if (decimal) "" else rational.numerator}",
+      exprToString(
+        lts[false], decimal,
+        lang
+      ),
+      exprToString(
+        fns[false], decimal, lang
+      ),
+      exprToString(ps[false], decimal, lang),
+    ).filter { it.isNotEmpty() }.joinToString(if (lang == null) "" else "*")
+    return if (d.isEmpty() || d == "1") n
+    else "$n/$d"
   }
 
   operator fun times(double: Double) = times(Rational(double))

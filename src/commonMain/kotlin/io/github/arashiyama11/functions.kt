@@ -40,10 +40,16 @@ val specialFunctions = mapOf(
   "max" to SpecialFunction(2, { Rational(max(it[0], it[1])).reduction() }, null, null),
   "pow" to SpecialFunction(2, {
     Rational(it[0]).pow(it[1].toInt()).reduction()
-  }, null, null, { args ->
-    val b = args[0].toString().let { if (it.length == 1) it else "($it)" }
-    val d = args[1].toString().let { if (it.length == 1) it else "($it)" }
-    "$b^$d"
+  }, null, null, { args, decimal, lang ->
+    if (!decimal && lang == null) {
+      val b = args[0].toString().let { if (it.length == 1) it else "($it)" }
+      val d = args[1].toString().let { if (it.length == 1) it else "($it)" }
+      "$b^$d"
+    } else {
+      val b = args[0].toStringWith(decimal, lang).let { if (it.length == 1) it else "($it)" }
+      val d = args[1].toStringWith(decimal, lang).let { if (it.length == 1) it else "($it)" }
+      "$b^$d"
+    }
   })
 )
 
@@ -53,5 +59,5 @@ data class SpecialFunction(
   val approximation: (List<Double>) -> TermBase,
   val differential: ((List<TermBase>, Letter) -> TermBase)?,
   val integral: ((List<TermBase>) -> TermBase)?,
-  val toStringFn: ((List<TermBase>) -> String)? = null
+  val toStringFn: ((List<TermBase>, Boolean, Language?) -> String)? = null
 )
