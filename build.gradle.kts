@@ -12,12 +12,16 @@ repositories {
   gradlePluginPortal()
 }
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 kotlin {
   jvm {
     compilations.all {
-      kotlinOptions.jvmTarget = "18"
+      kotlinOptions.jvmTarget = "1.8"
     }
-    withJava()
     testRuns["test"].executionTask.configure {
       useJUnitPlatform()
     }
@@ -39,22 +43,11 @@ kotlin {
 
 
   sourceSets {
-    val commonMain by getting {
-      dependencies {
-        implementation(kotlin("script-runtime"))
-      }
-    }
     val commonTest by getting {
       dependencies {
         implementation(kotlin("test"))
       }
     }
-    val jvmMain by getting
-    val jvmTest by getting
-    val jsMain by getting
-    val jsTest by getting
-    val nativeMain by getting
-    val nativeTest by getting
   }
 }
 
